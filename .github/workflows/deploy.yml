@@ -63,6 +63,17 @@ jobs:
             echo "destructive=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Debug Delta Output
+        run: |
+          echo "========== DELTA FILES =========="
+          find delta -type f || true
+
+          echo "========== PACKAGE.XML =========="
+          cat delta/package/package.xml || true
+
+          echo "========== DESTRUCTIVE CHANGES =========="
+          cat delta/destructiveChanges/destructiveChanges.xml || true
+
       - name: Validate Deployment (Apex Changed)
         if: steps.apex.outputs.apex == 'true'
         run: |
