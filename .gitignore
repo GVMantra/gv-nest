@@ -1,0 +1,4 @@
+.sfdx/tools
+.sfdx/typings
+.sfdx/indexes
+scripts
