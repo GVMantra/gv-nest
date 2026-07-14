@@ -1,0 +1,87 @@
+name: GV_Nest CI/CD Pipeline
+
+on:
+  pull_request:
+    branches:
+      - develop
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install -g @salesforce/cli
+
+      - name: Install SFDX Git Delta
+        run: |
+          echo y | sf plugins install sfdx-git-delta
+
+      - name: Authenticate Org
+        shell: bash
+        run: |
+          echo "${{ secrets.GV_NEST_URL }}" > auth.txt
+          sf org login sfdx-url --sfdx-url-file auth.txt --alias Gv_Nest
+          sf org list
+
+      - name: Generate Delta Package
+        run: |
+          mkdir delta
+          sf sgd source delta \
+            --from origin/${{ github.event.pull_request.base.ref }} \
+            --to HEAD \
+            --output-dir delta
+
+      - name: Detect Apex Changes
+        id: apex
+        shell: bash
+        run: |
+          if find delta -type f \( -name "*.cls" -o -name "*.trigger" \) | grep -q .; then
+            echo "apex=true" >> $GITHUB_OUTPUT
+          else
+            echo "apex=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate Deployment (Apex Changed)
+        if: steps.apex.outputs.apex == 'true'
+        run: |
+          sf project deploy validate \
+            --manifest delta/package/package.xml \
+            --target-org Gv_Nest \
+            --test-level RunRelevantTests \
+            --wait 60
+
+      - name: Validate Deployment (No Apex)
+        if: steps.apex.outputs.apex == 'false'
+        run: |
+          sf project deploy validate \
+            --manifest delta/package/package.xml \
+            --target-org Gv_Nest \
+            --test-level RunRelevantTests \
+            --wait 60
+
+      - name: Deploy
+        run: |
+          sf project deploy start \
+            --manifest delta/package/package.xml \
+            --target-org Gv_Nest \
+            --wait 60
+
+      - name: Auto Merge Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} \
+            --merge \
+            --delete-branch
