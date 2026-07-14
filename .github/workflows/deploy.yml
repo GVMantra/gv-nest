@@ -53,6 +53,16 @@ jobs:
             echo "apex=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Detect Destructive Changes
+        id: destructive
+        shell: bash
+        run: |
+          if [ -f delta/destructiveChanges/destructiveChanges.xml ] && grep -q "<types>" delta/destructiveChanges/destructiveChanges.xml; then
+            echo "destructive=true" >> $GITHUB_OUTPUT
+          else
+            echo "destructive=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Validate Deployment (Apex Changed)
         if: steps.apex.outputs.apex == 'true'
         run: |
@@ -71,10 +81,19 @@ jobs:
             --test-level RunRelevantTests \
             --wait 60
 
-      - name: Deploy
+      - name: Deploy Metadata
         run: |
           sf project deploy start \
             --manifest delta/package/package.xml \
+            --target-org Gv_Nest \
+            --wait 60
+
+      - name: Deploy Destructive Changes
+        if: steps.destructive.outputs.destructive == 'true'
+        run: |
+          sf project deploy start \
+            --manifest delta/package/package.xml \
+            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
             --target-org Gv_Nest \
             --wait 60
 
