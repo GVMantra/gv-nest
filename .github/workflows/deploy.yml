@@ -31,7 +31,7 @@ jobs:
       - name: Authenticate Org
         shell: bash
         run: |
-          echo "${{ secrets.GV_NEST_AUTH_URL }}" > auth.txt
+          echo "${{ secrets.GV_NEST_URL }}" > auth.txt
           sf org login sfdx-url --sfdx-url-file auth.txt --alias Gv_Nest
           sf org list
 
