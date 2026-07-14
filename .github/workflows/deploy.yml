@@ -36,127 +36,99 @@ jobs:
           sf org login sfdx-url --sfdx-url-file auth.txt --alias Gv_Nest
           sf org list
 
-      - name: Debug Git SHAs
-        run: |
-          echo "========================"
-          echo "BASE REF : ${{ github.event.pull_request.base.ref }}"
-          echo "HEAD REF : ${{ github.event.pull_request.head.ref }}"
-          echo "BASE SHA : ${{ github.event.pull_request.base.sha }}"
-          echo "HEAD SHA : ${{ github.event.pull_request.head.sha }}"
-          echo "========================"
-
-          echo "Current Branch:"
-          git branch
-
-          echo "========================"
-
-          echo "Remote Branches:"
-          git branch -r
-
-          echo "========================"
-
-          echo "Current HEAD:"
-          git rev-parse HEAD
-
-          echo "========================"
-
-          echo "origin/develop SHA:"
-          git rev-parse origin/${{ github.event.pull_request.base.ref }} || true
-
-          echo "========================"
-
-          echo "Recent Commits:"
-          git log --oneline --graph --decorate -10
-
       - name: Generate Delta Package
         run: |
           mkdir -p delta
-
-          echo "===== BASE REF ====="
-          echo "${{ github.event.pull_request.base.ref }}"
-
-          echo "===== HEAD REF ====="
-          echo "${{ github.event.pull_request.head.ref }}"
-
-          echo "===== BASE SHA ====="
-          echo "${{ github.event.pull_request.base.sha }}"
-          git cat-file -t ${{ github.event.pull_request.base.sha }}
-
-          echo "===== HEAD SHA ====="
-          echo "${{ github.event.pull_request.head.sha }}"
-          git cat-file -t ${{ github.event.pull_request.head.sha }}
-
-          echo "===== CURRENT HEAD ====="
-          git rev-parse HEAD
-
-          echo "===== GIT LOG ====="
-          git log --oneline --graph --decorate -10
-
-          echo "===== GENERATING DELTA ====="
-
           sf sgd source delta \
             --from origin/${{ github.event.pull_request.base.ref }} \
             --to HEAD \
             --output-dir delta
 
-      - name: Detect Apex Changes
-        id: apex
+      - name: Detect Metadata and Destructive Changes
+        id: change_detector
         shell: bash
         run: |
+          # Check for Apex
           if find delta -type f \( -name "*.cls" -o -name "*.trigger" \) | grep -q .; then
             echo "apex=true" >> $GITHUB_OUTPUT
           else
             echo "apex=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Detect Destructive Changes
-        id: destructive
-        shell: bash
-        run: |
+          # Check if package.xml contains any elements to deploy
+          if grep -q "<types>" delta/package/package.xml; then
+            echo "constructive=true" >> $GITHUB_OUTPUT
+          else
+            echo "constructive=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check if destructive xml contains elements to delete
           if [ -f delta/destructiveChanges/destructiveChanges.xml ] && grep -q "<types>" delta/destructiveChanges/destructiveChanges.xml; then
             echo "destructive=true" >> $GITHUB_OUTPUT
           else
             echo "destructive=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Debug Delta Output
+      - name: Set Test Level
+        id: tests
         run: |
-          echo "========== DELTA FILES =========="
-          find delta -type f || true
+          if [ "${{ steps.change_detector.outputs.apex }}" = "true" ]; then
+            echo "level=RunRelevantTests" >> $GITHUB_OUTPUT
+          else
+            echo "level=RunLocalTests" >> $GITHUB_OUTPUT
+          fi
 
-          echo "========== PACKAGE.XML =========="
-          cat delta/package/package.xml || true
+      # Case 1: Deploy BOTH New Changes and Destructive Changes together
+      - name: Validate Combined Deployment
+        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'true'
+        run: |
+          sf project deploy validate \
+            --manifest delta/package/package.xml \
+            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
+            --target-org Gv_Nest \
+            --test-level ${{ steps.tests.outputs.level }} \
+            --wait 60
 
-          echo "========== DESTRUCTIVE CHANGES =========="
-          cat delta/destructiveChanges/destructiveChanges.xml || true
+      - name: Execute Combined Deployment
+        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'true'
+        run: |
+          sf project deploy start \
+            --manifest delta/package/package.xml \
+            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
+            --target-org Gv_Nest \
+            --wait 60
 
-      - name: Validate Deployment (Apex Changed)
-        if: steps.apex.outputs.apex == 'true'
+      # Case 2: Constructive ONLY Changes (No Deletions)
+      - name: Validate Constructive Only Deployment
+        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'false'
         run: |
           sf project deploy validate \
             --manifest delta/package/package.xml \
             --target-org Gv_Nest \
-            --test-level RunRelevantTests \
+            --test-level ${{ steps.tests.outputs.level }} \
             --wait 60
 
-      - name: Validate Deployment (No Apex)
-        if: steps.apex.outputs.apex == 'false'
-        run: |
-          sf project deploy validate \
-            --manifest delta/package/package.xml \
-            --target-org Gv_Nest \
-            --test-level RunRelevantTests \
-            --wait 60
-
-      - name: Deploy Metadata
+      - name: Execute Constructive Only Deployment
+        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'false'
         run: |
           sf project deploy start \
             --manifest delta/package/package.xml \
             --target-org Gv_Nest \
             --wait 60
 
-      - name: Deploy Destructive Changes
-        if: steps.destructive.outputs.destructive == 'true'
+      # Case 3: Destructive ONLY Changes (The fix for your current problem)
+      - name: Validate Destructive Only Deployment
+        if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'true'
+        run: |
+          sf project deploy validate \
+            --manifest delta/package/package.xml \
+            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
+            --target-org Gv_Nest \
+            --test-level ${{ steps.tests.outputs.level }} \
+            --wait 60
+
+      - name: Execute Destructive Only Deployment
+        if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'true'
         run: |
           sf project deploy start \
             --manifest delta/package/package.xml \
