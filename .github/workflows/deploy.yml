@@ -35,9 +35,41 @@ jobs:
           sf org login sfdx-url --sfdx-url-file auth.txt --alias Gv_Nest
           sf org list
 
+      - name: Debug Git SHAs
+        run: |
+          echo "========================"
+          echo "BASE REF : ${{ github.event.pull_request.base.ref }}"
+          echo "HEAD REF : ${{ github.event.pull_request.head.ref }}"
+          echo "BASE SHA : ${{ github.event.pull_request.base.sha }}"
+          echo "HEAD SHA : ${{ github.event.pull_request.head.sha }}"
+          echo "========================"
+
+          echo "Current Branch:"
+          git branch
+
+          echo "========================"
+
+          echo "Remote Branches:"
+          git branch -r
+
+          echo "========================"
+
+          echo "Current HEAD:"
+          git rev-parse HEAD
+
+          echo "========================"
+
+          echo "origin/develop SHA:"
+          git rev-parse origin/${{ github.event.pull_request.base.ref }} || true
+
+          echo "========================"
+
+          echo "Recent Commits:"
+          git log --oneline --graph --decorate -10
+
       - name: Generate Delta Package
         run: |
-          mkdir delta
+          mkdir -p delta
           sf sgd source delta \
             --from origin/${{ github.event.pull_request.base.ref }} \
             --to HEAD \
