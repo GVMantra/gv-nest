@@ -59,7 +59,7 @@ jobs:
           sf project deploy validate \
             --manifest delta/package/package.xml \
             --target-org Gv_Nest \
-            --test-level RunLocalTests \
+            --test-level RunRelevantTests \
             --wait 60
 
       - name: Validate Deployment (No Apex)
@@ -68,7 +68,7 @@ jobs:
           sf project deploy validate \
             --manifest delta/package/package.xml \
             --target-org Gv_Nest \
-            --test-level NoTestRun \
+            --test-level RunRelevantTests \
             --wait 60
 
       - name: Deploy
