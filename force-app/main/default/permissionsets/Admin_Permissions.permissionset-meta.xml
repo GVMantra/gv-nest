@@ -7,22 +7,12 @@
     <description>System Administrator access for Project Nest.</description>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Account.Kunj_Test__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Account.Shreya_Test__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Account.Sparsh_Test__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Account.Yashi_Test__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
