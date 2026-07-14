@@ -68,21 +68,35 @@ jobs:
           git log --oneline --graph --decorate -10
 
       - name: Generate Delta Package
-  run: |
-    mkdir -p delta
+        run: |
+          mkdir -p delta
 
-    echo "===== BASE SHA ====="
-    git cat-file -t ${{ github.event.pull_request.base.sha }}
+          echo "===== BASE REF ====="
+          echo "${{ github.event.pull_request.base.ref }}"
 
-    echo "===== HEAD SHA ====="
-    git cat-file -t ${{ github.event.pull_request.head.sha }}
+          echo "===== HEAD REF ====="
+          echo "${{ github.event.pull_request.head.ref }}"
 
-    echo "===== GENERATING DELTA ====="
+          echo "===== BASE SHA ====="
+          echo "${{ github.event.pull_request.base.sha }}"
+          git cat-file -t ${{ github.event.pull_request.base.sha }}
 
-    sf sgd source delta \
-      --from origin/${{ github.event.pull_request.base.ref }} \
-      --to HEAD \
-      --output-dir delta
+          echo "===== HEAD SHA ====="
+          echo "${{ github.event.pull_request.head.sha }}"
+          git cat-file -t ${{ github.event.pull_request.head.sha }}
+
+          echo "===== CURRENT HEAD ====="
+          git rev-parse HEAD
+
+          echo "===== GIT LOG ====="
+          git log --oneline --graph --decorate -10
+
+          echo "===== GENERATING DELTA ====="
+
+          sf sgd source delta \
+            --from origin/${{ github.event.pull_request.base.ref }} \
+            --to HEAD \
+            --output-dir delta
 
       - name: Detect Apex Changes
         id: apex
