@@ -1,4 +1,4 @@
-name: Salesforce CD (Direct Deploy on Merge)
+name: Salesforce CD (Smart Whole Branch + Destructive)
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ on:
       - develop
 
 jobs:
-  # JOB 1: Automatically merge the PR via GitHub API (Snappy & Isolated)
+  # JOB 1: Automatically merge the PR via GitHub API
   auto_merge:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -21,7 +21,6 @@ jobs:
       group: gv-nest-merge-${{ github.event.pull_request.number }}
       cancel-in-progress: false
     steps:
-      # Bypasses the GitHub recursion guard using your newly added PAT_TOKEN
       - name: Auto Merge Pull Request
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
@@ -35,16 +34,20 @@ jobs:
   deploy_develop:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    # Needs write access now -- this job pushes a tag marking the last
+    # successfully deployed commit, so it can never lose track of what
+    # the org actually has, regardless of workflow gaps or skipped runs.
     permissions:
-      contents: read
+      contents: write
     concurrency:
       group: gv-nest-deploy
       cancel-in-progress: false
     steps:
-      - name: Checkout Repository (Full History)
+      - name: Checkout Repository (Full History + Tags)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          fetch-tags: true
 
       - name: Install Salesforce CLI
         run: |
@@ -61,12 +64,32 @@ jobs:
           sf org login sfdx-url --sfdx-url-file auth.txt --alias Gv_Nest
           sf org list
 
-      # Tracks the exact delta of the entire push event sequence via github.event.before
+      # Determines what "before" actually means for this run.
+      # Uses a persisted tag (last-successful-deploy) pointing at the commit
+      # the org actually received last -- NOT github.event.before, which only
+      # reflects the previous push event and silently misses anything that
+      # accumulated during a disabled workflow or skipped run.
+      # If no tag exists yet (first-ever run), diffs from git's empty tree,
+      # so everything currently in develop is correctly treated as new.
+      - name: Determine Base Ref for Delta
+        id: base_ref
+        shell: bash
+        run: |
+          if git rev-parse -q --verify "refs/tags/last-successful-deploy" >/dev/null; then
+            BASE=$(git rev-parse refs/tags/last-successful-deploy)
+            echo "Found last-successful-deploy tag at $BASE"
+          else
+            BASE="4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+            echo "No prior deploy tag found -- treating this as the first deploy"
+          fi
+          echo "base=$BASE" >> $GITHUB_OUTPUT
+
+      # Generate the delta files against the last ACTUAL deploy, not the last push
       - name: Generate Delta Package
         run: |
           mkdir delta
           sf sgd source delta \
-            --from ${{ github.event.before }} \
+            --from ${{ steps.base_ref.outputs.base }} \
             --to HEAD \
             --output-dir delta
 
@@ -81,7 +104,7 @@ jobs:
           else
             echo "constructive=false" >> $GITHUB_OUTPUT
           fi
-          
+
           # Check for destructive changes (deletions)
           if [ -f "delta/destructiveChanges/destructiveChanges.xml" ] && grep -q "<types>" delta/destructiveChanges/destructiveChanges.xml; then
             echo "destructive=true" >> $GITHUB_OUTPUT
@@ -89,27 +112,30 @@ jobs:
             echo "destructive=false" >> $GITHUB_OUTPUT
           fi
 
-      # Case 1: Both Constructive AND Destructive Changes Exist
-      - name: Execute Combined Deployment
-        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'true'
+      # Case 1: Constructive updates exist (with or without deletions).
+      # Deploys the WHOLE develop branch, so any gap in history is caught up
+      # in full every time -- immune to how many commits piled up in between.
+      - name: Execute Whole Branch Deploy (With Post-Destructive if applicable)
+        if: steps.change_detector.outputs.constructive == 'true'
         run: |
-          sf project deploy start \
-            --manifest delta/package/package.xml \
-            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
-            --target-org Gv_Nest \
-            --wait 60
+          if [ "${{ steps.change_detector.outputs.destructive }}" = "true" ]; then
+            sf project deploy start \
+              --source-dir force-app \
+              --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
+              --target-org Gv_Nest \
+              --wait 60
+          else
+            sf project deploy start \
+              --source-dir force-app \
+              --target-org Gv_Nest \
+              --wait 60
+          fi
 
-      # Case 2: Constructive ONLY Changes (No Deletions)
-      - name: Execute Constructive Only Deployment
-        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'false'
-        run: |
-          sf project deploy start \
-            --manifest delta/package/package.xml \
-            --target-org Gv_Nest \
-            --wait 60
-
-      # Case 3: Destructive ONLY Changes (Handling empty package.xml errors)
-      - name: Execute Destructive Only Deployment
+      # Case 2: Destructive ONLY changes (no new or modified files).
+      # This now correctly catches deletions from ANY point since the last
+      # real deploy, not just the last push -- the exact gap that used to
+      # let deletions slip through permanently.
+      - name: Execute Destructive Only Delta Deployment
         if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'true'
         run: |
           sf project deploy start \
@@ -127,12 +153,25 @@ jobs:
           echo "Skipping deployment execution safely."
           echo "=========================================================="
 
-      # Alert Step: Catches any deployment failures
+      # Marks this commit as the last one the org actually received.
+      # Runs whenever the job succeeds -- including the no-changes case,
+      # since "already in sync" is also a successful outcome worth recording.
+      - name: Update Last Successful Deploy Marker
+        if: success()
+        run: |
+          git tag -f last-successful-deploy HEAD
+          git push origin refs/tags/last-successful-deploy --force
+
+      # Alert Step: Catches any deployment failures. Note the tag is NOT
+      # moved in this case -- the marker stays at the last commit that
+      # genuinely made it into the org, so the next run's delta will still
+      # correctly include everything from this failed attempt.
       - name: Notify on Deploy Failure
         if: failure()
         run: |
           echo "=========================================================="
           echo "🚨 CRITICAL ERROR: Deploy to Gv_Nest failed after merge!"
           echo "The develop branch and the target Salesforce Org are now OUT OF SYNC."
-          echo "Please review the logs above immediately."
+          echo "The last-successful-deploy marker was NOT moved, so the next"
+          echo "run will still pick up everything that failed here."
           echo "=========================================================="
