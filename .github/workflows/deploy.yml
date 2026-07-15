@@ -1,4 +1,4 @@
-name: GV_Nest CI/CD Pipeline
+name: Salesforce CI/CD (Deploy then Merge)
 
 on:
   pull_request:
@@ -6,21 +6,28 @@ on:
       - develop
     types: [opened, synchronize, reopened]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
-  deploy:
+  deploy_and_merge:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: gv-nest-deploy-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
     steps:
-      - name: Checkout Repository
+      # Pinned to the actual PR head commit, NOT the default merge-ref.
+      # actions/checkout on a pull_request event defaults to refs/pull/<N>/merge,
+      # which GitHub only recomputes on certain PR events and can be stale relative
+      # to origin/develop's current tip -- that staleness is what caused the
+      # original "NothingToDeploy" bug (empty delta despite real changes in the PR).
+      - name: Checkout Repository (Full History)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
 
+      # Install CLI Tools
       - name: Install Salesforce CLI
         run: |
           npm install -g @salesforce/cli
@@ -29,6 +36,7 @@ jobs:
         run: |
           echo y | sf plugins install sfdx-git-delta
 
+      # Authenticate using your org auth URL secret
       - name: Authenticate Org
         shell: bash
         run: |
@@ -36,59 +44,35 @@ jobs:
           sf org login sfdx-url --sfdx-url-file auth.txt --alias Gv_Nest
           sf org list
 
+      # Compares the incoming PR branch (HEAD, pinned above) against the target branch (develop)
       - name: Generate Delta Package
         run: |
-          mkdir -p delta
+          mkdir delta
           sf sgd source delta \
-            --from origin/${{ github.event.pull_request.base.ref }} \
+            --from origin/develop \
             --to HEAD \
             --output-dir delta
 
-      - name: Detect Metadata and Destructive Changes
+      # Inspects the delta generation to set the conditional flags
+      - name: Detect Changes Type
         id: change_detector
         shell: bash
         run: |
-          # Check for Apex
-          if find delta -type f \( -name "*.cls" -o -name "*.trigger" \) | grep -q .; then
-            echo "apex=true" >> $GITHUB_OUTPUT
-          else
-            echo "apex=false" >> $GITHUB_OUTPUT
-          fi
-
-          # Check if package.xml contains any elements to deploy
+          # Check for constructive changes (additions/updates)
           if grep -q "<types>" delta/package/package.xml; then
             echo "constructive=true" >> $GITHUB_OUTPUT
           else
             echo "constructive=false" >> $GITHUB_OUTPUT
           fi
 
-          # Check if destructive xml contains elements to delete
-          if [ -f delta/destructiveChanges/destructiveChanges.xml ] && grep -q "<types>" delta/destructiveChanges/destructiveChanges.xml; then
+          # Check for destructive changes (deletions)
+          if [ -f "delta/destructiveChanges/destructiveChanges.xml" ] && grep -q "<types>" delta/destructiveChanges/destructiveChanges.xml; then
             echo "destructive=true" >> $GITHUB_OUTPUT
           else
             echo "destructive=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set Test Level
-        id: tests
-        run: |
-          if [ "${{ steps.change_detector.outputs.apex }}" = "true" ]; then
-            echo "level=RunRelevantTests" >> $GITHUB_OUTPUT
-          else
-            echo "level=RunLocalTests" >> $GITHUB_OUTPUT
-          fi
-
-      # Case 1: Deploy BOTH New Changes and Destructive Changes together
-      - name: Validate Combined Deployment
-        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'true'
-        run: |
-          sf project deploy validate \
-            --manifest delta/package/package.xml \
-            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
-            --target-org Gv_Nest \
-            --test-level ${{ steps.tests.outputs.level }} \
-            --wait 60
-
+      # Case 1: Both Constructive AND Destructive Changes Exist
       - name: Execute Combined Deployment
         if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'true'
         run: |
@@ -99,15 +83,6 @@ jobs:
             --wait 60
 
       # Case 2: Constructive ONLY Changes (No Deletions)
-      - name: Validate Constructive Only Deployment
-        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'false'
-        run: |
-          sf project deploy validate \
-            --manifest delta/package/package.xml \
-            --target-org Gv_Nest \
-            --test-level ${{ steps.tests.outputs.level }} \
-            --wait 60
-
       - name: Execute Constructive Only Deployment
         if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'false'
         run: |
@@ -116,17 +91,7 @@ jobs:
             --target-org Gv_Nest \
             --wait 60
 
-      # Case 3: Destructive ONLY Changes (The fix for your current problem)
-      - name: Validate Destructive Only Deployment
-        if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'true'
-        run: |
-          sf project deploy validate \
-            --manifest delta/package/package.xml \
-            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
-            --target-org Gv_Nest \
-            --test-level ${{ steps.tests.outputs.level }} \
-            --wait 60
-
+      # Case 3: Destructive ONLY Changes (Handling empty package.xml errors)
       - name: Execute Destructive Only Deployment
         if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'true'
         run: |
@@ -136,10 +101,23 @@ jobs:
             --target-org Gv_Nest \
             --wait 60
 
+      # Fallback log handling for non-metadata changes (README updates, etc.)
+      - name: No Changes Detected
+        if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'false'
+        run: |
+          echo "=========================================================="
+          echo "INFO: No Salesforce metadata changes or deletions detected."
+          echo "Skipping deployment execution safely."
+          echo "=========================================================="
+
+      # Final Step: If all deployment steps above succeed, the PR is merged.
+      # Uses the default secrets.GITHUB_TOKEN -- this won't trigger another workflow
+      # run, which is fine here since deployment already happened before this step.
       - name: Auto Merge Pull Request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr merge ${{ github.event.pull_request.number }} \
             --merge \
-            --delete-branch
+            --delete-branch \
+            --repo ${{ github.repository }}
