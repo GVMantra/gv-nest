@@ -1,0 +1,138 @@
+name: Salesforce CD (Direct Deploy on Merge)
+
+on:
+  pull_request:
+    branches:
+      - develop
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - develop
+
+jobs:
+  # JOB 1: Automatically merge the PR via GitHub API (Snappy & Isolated)
+  auto_merge:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: gv-nest-merge-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    steps:
+      # Bypasses the GitHub recursion guard using your newly added PAT_TOKEN
+      - name: Auto Merge Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} \
+            --merge \
+            --delete-branch \
+            --repo ${{ github.repository }}
+
+  # JOB 2: Runs AFTER the PR is successfully merged into develop
+  deploy_develop:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    concurrency:
+      group: gv-nest-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Checkout Repository (Full History)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install -g @salesforce/cli
+
+      - name: Install SFDX Git Delta
+        run: |
+          echo y | sf plugins install sfdx-git-delta
+
+      - name: Authenticate Org
+        shell: bash
+        run: |
+          echo "${{ secrets.GV_NEST_URL }}" > auth.txt
+          sf org login sfdx-url --sfdx-url-file auth.txt --alias Gv_Nest
+          sf org list
+
+      # Tracks the exact delta of the entire push event sequence via github.event.before
+      - name: Generate Delta Package
+        run: |
+          mkdir delta
+          sf sgd source delta \
+            --from ${{ github.event.before }} \
+            --to HEAD \
+            --output-dir delta
+
+      # Inspects the delta generation to set the conditional flags
+      - name: Detect Changes Type
+        id: change_detector
+        shell: bash
+        run: |
+          # Check for constructive changes (additions/updates)
+          if grep -q "<types>" delta/package/package.xml; then
+            echo "constructive=true" >> $GITHUB_OUTPUT
+          else
+            echo "constructive=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for destructive changes (deletions)
+          if [ -f "delta/destructiveChanges/destructiveChanges.xml" ] && grep -q "<types>" delta/destructiveChanges/destructiveChanges.xml; then
+            echo "destructive=true" >> $GITHUB_OUTPUT
+          else
+            echo "destructive=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Case 1: Both Constructive AND Destructive Changes Exist
+      - name: Execute Combined Deployment
+        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'true'
+        run: |
+          sf project deploy start \
+            --manifest delta/package/package.xml \
+            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
+            --target-org Gv_Nest \
+            --wait 60
+
+      # Case 2: Constructive ONLY Changes (No Deletions)
+      - name: Execute Constructive Only Deployment
+        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'false'
+        run: |
+          sf project deploy start \
+            --manifest delta/package/package.xml \
+            --target-org Gv_Nest \
+            --wait 60
+
+      # Case 3: Destructive ONLY Changes (Handling empty package.xml errors)
+      - name: Execute Destructive Only Deployment
+        if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'true'
+        run: |
+          sf project deploy start \
+            --manifest delta/package/package.xml \
+            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
+            --target-org Gv_Nest \
+            --wait 60
+
+      # Fallback log handling for non-metadata changes (README updates, etc.)
+      - name: No Changes Detected
+        if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'false'
+        run: |
+          echo "=========================================================="
+          echo "INFO: No Salesforce metadata changes or deletions detected."
+          echo "Skipping deployment execution safely."
+          echo "=========================================================="
+
+      # Alert Step: Catches any deployment failures
+      - name: Notify on Deploy Failure
+        if: failure()
+        run: |
+          echo "=========================================================="
+          echo "🚨 CRITICAL ERROR: Deploy to Gv_Nest failed after merge!"
+          echo "The develop branch and the target Salesforce Org are now OUT OF SYNC."
+          echo "Please review the logs above immediately."
+          echo "=========================================================="
