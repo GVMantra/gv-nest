@@ -58,6 +58,7 @@ jobs:
             echo "destructive=false" >> $GITHUB_OUTPUT
           fi
 
+      # Case 1: Both Constructive AND Destructive Changes Exist (Uses delta manifest)
       - name: Execute Combined Deployment
         if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'true'
         run: |
@@ -67,14 +68,17 @@ jobs:
             --target-org Gv_Nest \
             --wait 60
 
+      # Case 2: Constructive ONLY Changes (No Deletions)
+      # MODIFIED: Now uses --source-dir force-app to deploy the whole branch
       - name: Execute Constructive Only Deployment
         if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'false'
         run: |
           sf project deploy start \
-            --manifest delta/package/package.xml \
+            --source-dir force-app \
             --target-org Gv_Nest \
             --wait 60
 
+      # Case 3: Destructive ONLY Changes (Uses delta manifest)
       - name: Execute Destructive Only Deployment
         if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'true'
         run: |
