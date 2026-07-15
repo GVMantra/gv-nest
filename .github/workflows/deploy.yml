@@ -1,54 +1,33 @@
-name: Salesforce CD (Direct Deploy on Merge)
+name: Salesforce CI/CD (Deploy then Merge)
 
 on:
   pull_request:
     branches:
       - develop
     types: [opened, synchronize, reopened]
-  push:
-    branches:
-      - develop
-
-# Top-level permissions removed to enforce strict, granular per-job scopes.
 
 jobs:
-  # JOB 1: Automatically merge the PR via GitHub API (Fast & Isolated)
-  auto_merge:
-    if: github.event_name == 'pull_request'
+  deploy_and_merge:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
     concurrency:
-      group: gv-nest-merge-${{ github.event.pull_request.number }}
+      group: gv-nest-deploy-${{ github.event.pull_request.number }}
       cancel-in-progress: false
     steps:
-      # Removed actions/checkout@v4 completely to save time. 
-      # Passing --repo explicitly allows the GitHub CLI to interact directly with the API.
-      - name: Auto Merge Pull Request
-        env:
-          GH_TOKEN: ${{ secrets.GV_NEST_URL }}
-        run: |
-          gh pr merge ${{ github.event.pull_request.number }} \
-            --merge \
-            --delete-branch \
-            --repo ${{ github.repository }}
-
-  # JOB 2: Runs AFTER the PR is successfully merged into develop
-  deploy_develop:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read # Restrictive scope: This job only needs to read the repository code.
-    concurrency:
-      group: gv-nest-deploy
-      cancel-in-progress: false
-    steps:
+      # Pinned to the actual PR head commit, NOT the default merge-ref.
+      # actions/checkout on a pull_request event defaults to refs/pull/<N>/merge,
+      # which GitHub only recomputes on certain PR events and can be stale relative
+      # to origin/develop's current tip -- that staleness is what caused the
+      # original "NothingToDeploy" bug (empty delta despite real changes in the PR).
       - name: Checkout Repository (Full History)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
 
+      # Install CLI Tools
       - name: Install Salesforce CLI
         run: |
           npm install -g @salesforce/cli
@@ -57,6 +36,7 @@ jobs:
         run: |
           echo y | sf plugins install sfdx-git-delta
 
+      # Authenticate using your org auth URL secret
       - name: Authenticate Org
         shell: bash
         run: |
@@ -64,12 +44,12 @@ jobs:
           sf org login sfdx-url --sfdx-url-file auth.txt --alias Gv_Nest
           sf org list
 
-      # Tracks the exact delta of the entire push event sequence via github.event.before
+      # Compares the incoming PR branch (HEAD, pinned above) against the target branch (develop)
       - name: Generate Delta Package
         run: |
           mkdir delta
           sf sgd source delta \
-            --from ${{ github.event.before }} \
+            --from origin/develop \
             --to HEAD \
             --output-dir delta
 
@@ -84,7 +64,7 @@ jobs:
           else
             echo "constructive=false" >> $GITHUB_OUTPUT
           fi
-          
+
           # Check for destructive changes (deletions)
           if [ -f "delta/destructiveChanges/destructiveChanges.xml" ] && grep -q "<types>" delta/destructiveChanges/destructiveChanges.xml; then
             echo "destructive=true" >> $GITHUB_OUTPUT
@@ -111,7 +91,7 @@ jobs:
             --target-org Gv_Nest \
             --wait 60
 
-      # Case 3: Destructive ONLY Changes (The fix for your current problem)
+      # Case 3: Destructive ONLY Changes (Handling empty package.xml errors)
       - name: Execute Destructive Only Deployment
         if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'true'
         run: |
@@ -130,14 +110,14 @@ jobs:
           echo "Skipping deployment execution safely."
           echo "=========================================================="
 
-      # Alert Step: Catches any deployment failures so your team is instantly aware
-      # that Git develop and your target org are out of sync.
-      - name: Notify on Deploy Failure
-        if: failure()
+      # Final Step: If all deployment steps above succeed, the PR is merged.
+      # Uses the default secrets.GITHUB_TOKEN -- this won't trigger another workflow
+      # run, which is fine here since deployment already happened before this step.
+      - name: Auto Merge Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "=========================================================="
-          echo "🚨 CRITICAL ERROR: Deploy to Gv_Nest failed after merge!"
-          echo "The develop branch and the target Salesforce Org are now OUT OF SYNC."
-          echo "Please review the logs above immediately."
-          echo "=========================================================="
-          # Optional: You can curl a Slack/Teams webhook here down the line.
+          gh pr merge ${{ github.event.pull_request.number }} \
+            --merge \
+            --delete-branch \
+            --repo ${{ github.repository }}
