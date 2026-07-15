@@ -1,48 +1,23 @@
-name: GV-Nest Workflow
+name: Salesforce CD (Direct Deploy on Merge)
 
 on:
-  pull_request:
-    branches:
-      - develop
-    types: [opened, synchronize, reopened]
   push:
     branches:
       - develop
 
 jobs:
-  auto_merge:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    concurrency:
-      group: gv-nest-merge-${{ github.event.pull_request.number }}
-      cancel-in-progress: false
-    steps:
-      - name: Auto Merge Pull Request
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          gh pr merge ${{ github.event.pull_request.number }} \
-            --merge \
-            --delete-branch \
-            --repo ${{ github.repository }}
-
   deploy_develop:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     concurrency:
       group: gv-nest-deploy
       cancel-in-progress: false
     steps:
-      - name: Checkout Repository (Full History + Tags)
+      - name: Checkout Repository (Full History)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          fetch-tags: true
 
       - name: Install Salesforce CLI
         run: |
@@ -59,22 +34,11 @@ jobs:
           sf org login sfdx-url --sfdx-url-file auth.txt --alias Gv_Nest
           sf org list
 
-      - name: Determine Base Ref for Delta
-        id: base_ref
-        shell: bash
-        run: |
-          if git rev-parse -q --verify "refs/tags/last-successful-deploy" >/dev/null; then
-            BASE=$(git rev-parse refs/tags/last-successful-deploy)
-          else
-            BASE="4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-          fi
-          echo "base=$BASE" >> $GITHUB_OUTPUT
-
       - name: Generate Delta Package
         run: |
           mkdir delta
           sf sgd source delta \
-            --from ${{ steps.base_ref.outputs.base }} \
+            --from ${{ github.event.before }} \
             --to HEAD \
             --output-dir delta
 
@@ -87,30 +51,31 @@ jobs:
           else
             echo "constructive=false" >> $GITHUB_OUTPUT
           fi
-
+          
           if [ -f "delta/destructiveChanges/destructiveChanges.xml" ] && grep -q "<types>" delta/destructiveChanges/destructiveChanges.xml; then
             echo "destructive=true" >> $GITHUB_OUTPUT
           else
             echo "destructive=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Execute Whole Branch Deploy (With Post-Destructive if applicable)
-        if: steps.change_detector.outputs.constructive == 'true'
+      - name: Execute Combined Deployment
+        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'true'
         run: |
-          if [ "${{ steps.change_detector.outputs.destructive }}" = "true" ]; then
-            sf project deploy start \
-              --source-dir force-app \
-              --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
-              --target-org Gv_Nest \
-              --wait 60
-          else
-            sf project deploy start \
-              --source-dir force-app \
-              --target-org Gv_Nest \
-              --wait 60
-          fi
+          sf project deploy start \
+            --manifest delta/package/package.xml \
+            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
+            --target-org Gv_Nest \
+            --wait 60
 
-      - name: Execute Destructive Only Delta Deployment
+      - name: Execute Constructive Only Deployment
+        if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'false'
+        run: |
+          sf project deploy start \
+            --manifest delta/package/package.xml \
+            --target-org Gv_Nest \
+            --wait 60
+
+      - name: Execute Destructive Only Deployment
         if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'true'
         run: |
           sf project deploy start \
@@ -122,16 +87,16 @@ jobs:
       - name: No Changes Detected
         if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'false'
         run: |
-          echo "INFO: No Salesforce metadata changes or deletions detected. Skipping deployment."
-
-      - name: Update Last Successful Deploy Marker
-        if: success()
-        run: |
-          git tag -f last-successful-deploy HEAD
-          git push origin refs/tags/last-successful-deploy --force
+          echo "=========================================================="
+          echo "INFO: No Salesforce metadata changes or deletions detected."
+          echo "Skipping deployment execution safely."
+          echo "=========================================================="
 
       - name: Notify on Deploy Failure
         if: failure()
         run: |
+          echo "=========================================================="
           echo "🚨 CRITICAL ERROR: Deploy to Gv_Nest failed after merge!"
           echo "The develop branch and the target Salesforce Org are now OUT OF SYNC."
+          echo "Please review the logs above immediately."
+          echo "=========================================================="
