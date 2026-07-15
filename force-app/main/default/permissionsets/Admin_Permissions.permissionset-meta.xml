@@ -7,11 +7,6 @@
     <description>System Administrator access for Project Nest.</description>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Account.Shreya_Test__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Account.Sparsh_Test__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -534,10 +529,6 @@
         <recordType>Opportunity.Seller_Opportunity</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
-    <tabSettings>
-        <tab>Unit__c</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
     <tabSettings>
         <tab>Valuation__c</tab>
         <visibility>Visible</visibility>
