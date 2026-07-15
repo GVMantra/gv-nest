@@ -1,4 +1,4 @@
-name: GV-Nest Workflow
+name: Salesforce CD (Smart Whole Branch + Destructive)
 
 on:
   pull_request:
