@@ -1,4 +1,4 @@
-name: Salesforce CD (Smart Whole Branch + Destructive)
+name: GV-Nest Workflow
 
 on:
   pull_request:
@@ -45,10 +45,12 @@ jobs:
           fetch-tags: true
 
       - name: Install Salesforce CLI
-        run: npm install -g @salesforce/cli
+        run: |
+          npm install -g @salesforce/cli
 
       - name: Install SFDX Git Delta
-        run: echo y | sf plugins install sfdx-git-delta
+        run: |
+          echo y | sf plugins install sfdx-git-delta
 
       - name: Authenticate Org
         shell: bash
@@ -119,7 +121,8 @@ jobs:
 
       - name: No Changes Detected
         if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'false'
-        run: echo "INFO: No Salesforce metadata changes or deletions detected. Skipping deployment."
+        run: |
+          echo "INFO: No Salesforce metadata changes or deletions detected. Skipping deployment."
 
       - name: Update Last Successful Deploy Marker
         if: success()
