@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Account_Status__c</fullName>
+    <label>Account Status</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Key account – HOS</fullName>
+                <default>false</default>
+                <label>Strategic - HOS</label>
+            </value>
+            <value>
+                <fullName>Withdrawn</fullName>
+                <default>false</default>
+                <label>Withdrawn</label>
+            </value>
+            <value>
+                <fullName>Core Hoseasons</fullName>
+                <default>false</default>
+                <label>Core - HOS</label>
+            </value>
+            <value>
+                <fullName>Specialist Hoseasons</fullName>
+                <default>false</default>
+                <label>Specialist - HOS</label>
+            </value>
+            <value>
+                <fullName>Agency - HOS</fullName>
+                <default>false</default>
+                <label>Agency - HOS</label>
+            </value>
+            <value>
+                <fullName>Active</fullName>
+                <default>false</default>
+                <label>Active</label>
+            </value>
+            <value>
+                <fullName>Agency - CDC</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Agency - CDC</label>
+            </value>
+            <value>
+                <fullName>Amberley and Portscatho</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Amberley and Portscatho</label>
+            </value>
+            <value>
+                <fullName>Attempted Welcome Call</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Attempted Welcome Call</label>
+            </value>
+            <value>
+                <fullName>Commercial Risk</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Commercial Risk</label>
+            </value>
+            <value>
+                <fullName>Declined</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Declined</label>
+            </value>
+            <value>
+                <fullName>Graduated</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Graduated</label>
+            </value>
+            <value>
+                <fullName>Integration Supplier</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Integration Supplier</label>
+            </value>
+            <value>
+                <fullName>Key account – CDC</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Key account managed – CDC</label>
+            </value>
+            <value>
+                <fullName>L&amp;P - Disqualified</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>L&amp;P - Disqualified</label>
+            </value>
+            <value>
+                <fullName>L&amp;P - New Owner</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>L&amp;P - New Owner</label>
+            </value>
+            <value>
+                <fullName>L&amp;P - Recruitment Stage</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>L&amp;P - Recruitment Stage</label>
+            </value>
+            <value>
+                <fullName>Landal</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Landal</label>
+            </value>
+            <value>
+                <fullName>New Owner</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>New Owner</label>
+            </value>
+            <value>
+                <fullName>New Owner at Risk</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>New Owner at Risk</label>
+            </value>
+            <value>
+                <fullName>New owner at risk with NOT</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>New owner at risk with NOT</label>
+            </value>
+            <value>
+                <fullName>Owner Risk</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Owner Risk</label>
+            </value>
+            <value>
+                <fullName>Portscatho</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Portscatho</label>
+            </value>
+            <value>
+                <fullName>Quality Cottages</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Quality Cottages</label>
+            </value>
+            <value>
+                <fullName>Quality Unearthed</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Quality Unearthed</label>
+            </value>
+            <value>
+                <fullName>With retention</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>With retention</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
