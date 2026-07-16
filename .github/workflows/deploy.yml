@@ -1,39 +1,12 @@
 name: Salesforce CD (Direct Deploy on Merge)
 
 on:
-  pull_request:
-    branches:
-      - develop
-    types: [opened, synchronize, reopened]
   push:
     branches:
       - develop
 
 jobs:
-  # JOB 1: Automatically merge the PR via GitHub API (Snappy & Isolated)
-  auto_merge:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    concurrency:
-      group: gv-nest-merge-${{ github.event.pull_request.number }}
-      cancel-in-progress: false
-    steps:
-      # Bypasses the GitHub recursion guard using your newly added PAT_TOKEN
-      - name: Auto Merge Pull Request
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          gh pr merge ${{ github.event.pull_request.number }} \
-            --merge \
-            --delete-branch \
-            --repo ${{ github.repository }}
-
-  # JOB 2: Runs AFTER the PR is successfully merged into develop
   deploy_develop:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -61,7 +34,6 @@ jobs:
           sf org login sfdx-url --sfdx-url-file auth.txt --alias Gv_Nest
           sf org list
 
-      # Tracks the exact delta of the entire push event sequence via github.event.before
       - name: Generate Delta Package
         run: |
           mkdir delta
@@ -70,26 +42,23 @@ jobs:
             --to HEAD \
             --output-dir delta
 
-      # Inspects the delta generation to set the conditional flags
       - name: Detect Changes Type
         id: change_detector
         shell: bash
         run: |
-          # Check for constructive changes (additions/updates)
           if grep -q "<types>" delta/package/package.xml; then
             echo "constructive=true" >> $GITHUB_OUTPUT
           else
             echo "constructive=false" >> $GITHUB_OUTPUT
           fi
           
-          # Check for destructive changes (deletions)
           if [ -f "delta/destructiveChanges/destructiveChanges.xml" ] && grep -q "<types>" delta/destructiveChanges/destructiveChanges.xml; then
             echo "destructive=true" >> $GITHUB_OUTPUT
           else
             echo "destructive=false" >> $GITHUB_OUTPUT
           fi
 
-      # Case 1: Both Constructive AND Destructive Changes Exist
+      # Case 1: Both Constructive AND Destructive Changes Exist (Uses delta manifest)
       - name: Execute Combined Deployment
         if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'true'
         run: |
@@ -100,15 +69,16 @@ jobs:
             --wait 60
 
       # Case 2: Constructive ONLY Changes (No Deletions)
+      # MODIFIED: Now uses --source-dir force-app to deploy the whole branch
       - name: Execute Constructive Only Deployment
         if: steps.change_detector.outputs.constructive == 'true' && steps.change_detector.outputs.destructive == 'false'
         run: |
           sf project deploy start \
-            --manifest delta/package/package.xml \
+            --source-dir force-app \
             --target-org Gv_Nest \
             --wait 60
 
-      # Case 3: Destructive ONLY Changes (Handling empty package.xml errors)
+      # Case 3: Destructive ONLY Changes (Uses delta manifest)
       - name: Execute Destructive Only Deployment
         if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'true'
         run: |
@@ -118,7 +88,6 @@ jobs:
             --target-org Gv_Nest \
             --wait 60
 
-      # Fallback log handling for non-metadata changes (README updates, etc.)
       - name: No Changes Detected
         if: steps.change_detector.outputs.constructive == 'false' && steps.change_detector.outputs.destructive == 'false'
         run: |
@@ -127,7 +96,6 @@ jobs:
           echo "Skipping deployment execution safely."
           echo "=========================================================="
 
-      # Alert Step: Catches any deployment failures
       - name: Notify on Deploy Failure
         if: failure()
         run: |
