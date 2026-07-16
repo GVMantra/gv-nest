@@ -60,6 +60,48 @@
             <targetReference>Tasks_Creation</targetReference>
         </connector>
     </assignments>
+    <customErrors>
+        <name>Get_Records_Error</name>
+        <label>Get Records Error</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <customErrorMessages>
+            <errorMessage>Failed to fetch any active task template.</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <customErrors>
+        <name>Task_Creation_Error</name>
+        <label>Task Creation Error</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <customErrorMessages>
+            <errorMessage>Failed to create Task Record.</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <decisions>
+        <name>Task_Template_Records_found</name>
+        <label>Task Template Records found?</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>No</defaultConnectorLabel>
+        <rules>
+            <name>Yes</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Active_Task_Template_Records</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Tasks_Creation</targetReference>
+            </connector>
+            <label>Yes</label>
+        </rules>
+    </decisions>
     <environments>Default</environments>
     <formulas>
         <name>DueDateFormula</name>
@@ -106,6 +148,9 @@
         <label>Create Task Records</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
+        <faultConnector>
+            <targetReference>Task_Creation_Error</targetReference>
+        </faultConnector>
         <inputReference>TaskRecord</inputReference>
     </recordCreates>
     <recordLookups>
@@ -115,8 +160,11 @@
         <locationY>0</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Tasks_Creation</targetReference>
+            <targetReference>Task_Template_Records_found</targetReference>
         </connector>
+        <faultConnector>
+            <targetReference>Get_Records_Error</targetReference>
+        </faultConnector>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Active__c</field>
