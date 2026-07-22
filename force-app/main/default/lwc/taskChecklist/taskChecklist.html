@@ -1,0 +1,146 @@
+<template>
+    <lightning-card title="Task Checklist" icon-name="standard:task">
+        <div class="task-list">
+
+            <template for:each={tasks} for:item="task">
+                <div key={task.Id} class={task.cssClass}>
+                    <template if:true={task.isProcessing}>
+                        <div class="task-spinner-container">
+                            <lightning-spinner
+                                alternative-text="Updating task status"
+                                size="small">
+                            </lightning-spinner>
+                        </div>
+                    </template>
+
+                    <div class="task-header">
+                        <div class="task-info">
+                            <a href={task.taskUrl}
+                                class="task-subject"
+                                data-id={task.Id}
+                                onclick={handleTaskClick}>{task.Subject}</a>
+                            <span class="task-assignee">{task.assignmentLabel}</span>
+                            <div class="task-due">
+                                Due Date: {task.dueDateFormatted} &nbsp;({task.Status})
+                            </div>
+                        </div>
+
+                        <!-- All status buttons show by default; Edit opens the modal instead of toggling them -->
+                        <div class="task-actions">
+                            <template if:true={task.showCompleteButton}>
+                                <lightning-button-icon
+                                    icon-name="utility:check"
+                                    variant="border-filled"
+                                    class="slds-m-right_x-small"
+                                    data-id={task.Id}
+                                    disabled={task.isProcessing}
+                                    onclick={handleComplete}
+                                    alternative-text="Mark Complete">
+                                </lightning-button-icon>
+                            </template>
+
+                            <template if:true={task.showPlayPauseButton}>
+                                <lightning-button-icon
+                                    icon-name={task.playPauseIcon}
+                                    variant="border-filled"
+                                    class="slds-m-right_x-small"
+                                    data-id={task.Id}
+                                    data-status={task.playPauseTargetStatus}
+                                    disabled={task.isProcessing}
+                                    onclick={handlePlayPause}
+                                    alternative-text={task.playPauseLabel}>
+                                </lightning-button-icon>
+                            </template>
+
+                            <lightning-button-icon
+                                icon-name="utility:edit"
+                                variant="border-filled"
+                                data-id={task.Id}
+                                disabled={task.isProcessing}
+                                onclick={handleEditClick}
+                                alternative-text="Edit">
+                            </lightning-button-icon>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <template if:true={noTasks}>
+                <p class="slds-p-around_medium slds-text-color_weak">No tasks found for this opportunity.</p>
+            </template>
+
+        </div>
+    </lightning-card>
+
+    <!-- Edit Task modal: pops up when the pencil icon is clicked -->
+    <template if:true={showEditModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open" aria-modal="true" aria-labelledby="edit-task-modal-heading">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close modal-close-btn"
+                        title="Close"
+                        onclick={handleModalClose}>
+                        <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="edit-task-modal-heading" class="slds-text-heading_medium slds-hyphenate">Edit Task</h2>
+                </header>
+
+                <lightning-record-edit-form
+                    record-id={editingTaskId}
+                    object-api-name="Task"
+                    onload={handleFormLoad}
+                    onsuccess={handleEditSuccess}>
+                    <div class="slds-modal__content slds-p-around_medium modal-content-wrapper">
+
+                        <!-- The form and all its fields are always mounted now (no if:false
+                             gating them), so they all fetch/render together. The spinner is
+                             just an overlay on top, and handleFormLoad() in the JS controls
+                             when it lifts — once lightning-record-edit-form signals its
+                             record data has actually loaded. -->
+                        <template if:true={isModalLoading}>
+                            <div class="modal-spinner-container">
+                                <lightning-spinner alternative-text="Loading task" size="medium"></lightning-spinner>
+                            </div>
+                        </template>
+
+                        <lightning-messages></lightning-messages>
+                        <lightning-input-field field-name="Subject"></lightning-input-field>
+
+                        <!-- Gated behind isModalLoading (unlike the lightning-input-fields
+                             below) because this is a plain custom element with no async
+                             fetch of its own — it doesn't need to stay mounted early to
+                             "warm up" anything. Not rendering it until loading is done
+                             means there's nothing behind the spinner overlay to peek
+                             through, which sidesteps a z-index conflict between the
+                             overlay and this component's internal stacking. -->
+                        <template if:false={isModalLoading}>
+                            <div class="slds-form-element slds-m-bottom_small">
+                                <label class="slds-form-element__label">
+                                    <abbr class="slds-required" title="required">*</abbr>Assigned To
+                                </label>
+                                <lightning-record-picker
+                                    label="Assigned To"
+                                    variant="label-hidden"
+                                    object-api-name="User"
+                                    value={editingTaskOwnerId}
+                                    onchange={handleOwnerChange}>
+                                </lightning-record-picker>
+                            </div>
+                        </template>
+
+                        <lightning-input-field field-name="Status"></lightning-input-field>
+                        <lightning-input-field field-name="ActivityDate"></lightning-input-field>
+                        <lightning-input-field field-name="Priority"></lightning-input-field>
+                        <lightning-input-field field-name="Description"></lightning-input-field>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <button class="slds-button slds-button_neutral" onclick={handleModalClose}>Cancel</button>
+                        <button class="slds-button slds-button_brand" onclick={handleSaveClick}>Save</button>
+                    </footer>
+                </lightning-record-edit-form>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
