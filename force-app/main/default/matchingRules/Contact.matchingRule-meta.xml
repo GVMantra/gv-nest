@@ -9,7 +9,7 @@
             <fieldName>Email</fieldName>
             <matchingMethod>Exact</matchingMethod>
         </matchingRuleItems>
-        <ruleStatus>Active</ruleStatus>
+        <ruleStatus>Inactive</ruleStatus>
     </matchingRules>
     <matchingRules>
         <fullName>Contact_Name_and_Email_Exact_Match</fullName>
