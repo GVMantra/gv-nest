@@ -1,29 +1,72 @@
 import { LightningElement, api, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import { refreshApex } from '@salesforce/apex';
+import { getRelatedListRecords } from 'lightning/uiRelatedListApi';
+import { updateRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import getTasks from '@salesforce/apex/TaskChecklistController.getTasks';
-import updateTaskStatus from '@salesforce/apex/TaskChecklistController.updateTaskStatus';
 
 // Standard Task Status values this component works with
 const STATUS_IN_PROGRESS = 'In Progress';
 const STATUS_COMPLETED = 'Completed';
 
+const TASK_FIELDS = ['Task.Subject', 'Task.Status', 'Task.ActivityDate', 'Task.OwnerId', 'Task.Owner.Name'];
+
 export default class TaskChecklist extends NavigationMixin(LightningElement) {
     @api recordId;
 
     tasks = [];
-    wiredTasksResult; // kept so we can call refreshApex() after an update or manual refresh
 
-    @wire(getTasks, { recordId: '$recordId' })
-    wiredTasks(result) {
-        this.wiredTasksResult = result;
-        if (result.data) {
-            this.tasks = result.data.map((task) => this.decorateTask(task));
+    // This wire is LDS-native. The standard edit window writes through Lightning Data Service's shared record cache when it saves, and any other LDS-native wire reading one of those same records — like this one — is automatically kept in sync by the platform.
+    @wire(getRelatedListRecords, {
+        parentRecordId: '$recordId',
+        relatedListId: 'Tasks',
+        fields: TASK_FIELDS
+    })
+    wiredTasks({ data, error }) {
+        if (data) {
+            this.tasks = data.records
+                .map((record) => this.flattenRecord(record))
+                .sort((a, b) => this.compareByActivityDate(a, b))
+                .map((task) => this.decorateTask(task));
             this.generateTaskUrls();
-        } else if (result.error) {
-            this.showToast('Error loading tasks', this.reduceError(result.error), 'error');
+        } else if (error) {
+            this.showToast('Error loading tasks', this.reduceError(error), 'error');
         }
+    }
+
+    flattenRecord(record) {
+        const fields = record.fields;
+
+        const ownerName =
+            fields.Owner &&
+            fields.Owner.value &&
+            fields.Owner.value.fields &&
+            fields.Owner.value.fields.Name
+                ? fields.Owner.value.fields.Name.value
+                : undefined;
+
+        return {
+            Id: record.id,
+            Subject: fields.Subject?.value,
+            Status: fields.Status?.value,
+            ActivityDate: fields.ActivityDate?.value,
+            OwnerId: fields.OwnerId?.value,
+            Owner: {
+                Name: ownerName
+            }
+        };
+    }
+
+    compareByActivityDate(a, b) {
+        if (!a.ActivityDate && !b.ActivityDate) {
+            return 0;
+        }
+        if (!a.ActivityDate) {
+            return 1;
+        }
+        if (!b.ActivityDate) {
+            return -1;
+        }
+        return a.ActivityDate < b.ActivityDate ? -1 : a.ActivityDate > b.ActivityDate ? 1 : 0;
     }
 
     get noTasks() {
@@ -76,7 +119,7 @@ export default class TaskChecklist extends NavigationMixin(LightningElement) {
         return ' - Unassigned';
     }
 
-    // Converts the "YYYY-MM-DD" string Apex returns for a Date field into "M/D/YYYY"
+    // Converts the "YYYY-MM-DD" string the UI API returns for a Date field into "M/D/YYYY"
     formatDueDate(activityDate) {
         if (!activityDate) {
             return 'Not Populated';
@@ -114,7 +157,7 @@ export default class TaskChecklist extends NavigationMixin(LightningElement) {
         });
     }
 
-    // Opens Salesforce's own standard Task edit window
+    // Opens Salesforce's own standard Task edit window. Saving there writes through Lightning Data Service, and the getRelatedListRecords wire above picks up that change automatically.
     handleEditClick(event) {
         const taskId = event.currentTarget.dataset.id;
         this[NavigationMixin.Navigate]({
@@ -124,16 +167,6 @@ export default class TaskChecklist extends NavigationMixin(LightningElement) {
                 objectApiName: 'Task',
                 actionName: 'edit'
             }
-        });
-    }
-
-    // The standard edit window above is outside this component's control. This manual refresh is the guaranteed way to pull in any changes made there.
-    handleRefreshClick() {
-        if (!this.wiredTasksResult) {
-            return;
-        }
-        refreshApex(this.wiredTasksResult).then(() => {
-            this.showToast('Refreshed', 'Task list updated.', 'success');
         });
     }
 
@@ -154,10 +187,9 @@ export default class TaskChecklist extends NavigationMixin(LightningElement) {
 
         this.setProcessing(taskId, true);
 
-        updateTaskStatus({ taskId, status })
-            .then(() => refreshApex(this.wiredTasksResult))
+        // updateRecord writes through the same LDS cache the standard edit window uses, so this alone is enough to make the getRelatedListRecords wire above re-fire with fresh data.
+        updateRecord({ fields: { Id: taskId, Status: status } })
             .then(() => {
-                // On success the wire re-fires and decorateTask() rebuilds every row based on the new Status, which is what flips the icon/buttons/color.
                 this.showToast('Success', 'Task updated.', 'success');
             })
             .catch((error) => {
