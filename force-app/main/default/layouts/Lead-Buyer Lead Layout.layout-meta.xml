@@ -66,6 +66,10 @@
             </layoutItems>
            
             <layoutItems>
+                <behavior>Required</behavior>
+                <field>Category__c</field>
+            </layoutItems>
+            <layoutItems>
                 <behavior>Edit</behavior>
                 <field>Rating</field>
             </layoutItems>
