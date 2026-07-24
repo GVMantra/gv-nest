@@ -3,13 +3,11 @@
     padding: 0.75rem;
     padding-right: 0.5rem; /* leaves room so the scrollbar doesn't sit on top of content */
     box-sizing: border-box;
-
     /* Caps the visible height to roughly 6 rows, then scrolls internally so the outer card stays a stable size. */
     max-height: 480px;
     overflow-y: scroll;
     overflow-x: hidden;
 }
-
 .task-item {
     position: relative; 
     background-color: #f3f2f2;
@@ -18,7 +16,6 @@
     margin-bottom: 0.5rem;
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
-
 .task-spinner-container {
     position: absolute;
     inset: 0;
@@ -26,81 +23,35 @@
     border-radius: 0.5rem;
     z-index: 1;
 }
-
 .task-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-
 .task-subject {
     font-weight: 700;
     color: inherit;
     text-decoration: none;
     cursor: pointer;
 }
-
 .task-subject:hover {
     text-decoration: underline;
 }
-
 .task-due {
     font-size: 0.8rem;
     color: #555;
     margin-top: 0.25rem;
 }
-
 .task-actions {
     display: flex;
     align-items: center;
     flex-shrink: 0;
 }
-
-/* Completed tasks turn green */
 .task-completed {
     background-color: #e3f9e5;
     border: 1px solid #4bca81;
 }
-
-/* Paused tasks turn orange */
-.task-paused {
+.task-in-progress {
     background-color: #fde9d9;
     border: 1px solid #ff9a3c;
-}
-
-/* In Progress tasks turn blue */
-.task-in-progress {
-    background-color: #e3f1fd;
-    border: 1px solid #4bb0e8;
-}
-
-/* Modal close button: default SLDS "inverse" styling assumes a dark
-   header background. Ours is plain white, so we color it blue manually
-   instead so it stays visible. */
-.modal-close-btn {
-    color: #0176d3;
-}
-
-.modal-close-btn lightning-icon {
-    --sds-c-icon-color-foreground-default: #0176d3;
-    --slds-c-icon-color-foreground-default: #0176d3;
-}
-
-/* Anchors the modal's loading spinner overlay */
-.modal-content-wrapper {
-    position: relative;
-    min-height: 120px; /* keeps the modal from collapsing to nothing while loading */
-}
-
-.modal-spinner-container {
-    position: absolute;
-    inset: 0;
-    background-color: rgba(255, 255, 255, 0.85);
-    z-index: 2;
-}
-
-/* Safety net in case the record-picker's suggestion dropdown gets
-   visually clipped by the modal's scroll container */
-.slds-modal__content {
-    overflow: visible;
 }
