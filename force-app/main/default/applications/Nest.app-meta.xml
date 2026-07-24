@@ -20,9 +20,12 @@
     <tabs>standard-Opportunity</tabs>
     <tabs>Unit__c</tabs>
     <tabs>Valuation__c</tabs>
+    <tabs>Interested_Buyer__c</tabs>
+    <tabs>Buyer_Requirement__c</tabs>
     <tabs>standard-Campaign</tabs>
     <tabs>standard-report</tabs>
     <tabs>standard-Dashboard</tabs>
+    <tabs>Opportunity_Document__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>Nest_UtilityBar</utilityBar>
 </CustomApplication>
