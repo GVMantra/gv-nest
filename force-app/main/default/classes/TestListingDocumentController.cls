@@ -1,17 +1,15 @@
 @isTest
-private class ListingDocumentsControllerTest {
+private class TestListingDocumentController {
     
-    // Create common test data once for all test methods
+    // Create common test data
     @testSetup
     static void setupData() {
         
-        // Create Test Account
         Account acc = new Account(
             Name = 'Test Account'
             );
         insert acc;
         
-        // Create Test Opportunity
         Opportunity opp = new Opportunity(
             Name = 'Test Opportunity',
         StageName = 'Prospecting',
@@ -21,7 +19,7 @@ private class ListingDocumentsControllerTest {
         insert opp;
     }
     
-    // Test getDocumentTypes() method
+    // Test getDocumentTypes()
     @isTest
     static void testGetDocumentTypes() {
         
@@ -32,15 +30,13 @@ private class ListingDocumentsControllerTest {
         
         Test.stopTest();
         
-        // Verify method executed successfully
         System.assertNotEquals(null, docs);
     }
     
-    // Test createOpportunityDocument() method
+    // Test createOpportunityDocument()
     @isTest
     static void testCreateOpportunityDocument() {
         
-        // Get test opportunity
         Opportunity opp = [
             SELECT Id
             FROM Opportunity
@@ -57,7 +53,6 @@ private class ListingDocumentsControllerTest {
         
         Test.stopTest();
         
-        // Verify Opportunity Document record is created
         System.assertNotEquals(null, docId);
         
         Opportunity_Document__c doc = [
@@ -68,23 +63,20 @@ private class ListingDocumentsControllerTest {
             WHERE Id = :docId
         ];
         
-        // Verify field values
         System.assertEquals(opp.Id, doc.Opportunity__c);
         System.assertEquals('Sale Deed', doc.Document_Type__c);
     }
     
-    // Test getOpportunityDocuments() method
+    // Test getOpportunityDocuments()
     @isTest
     static void testGetOpportunityDocuments() {
         
-        // Get test opportunity
         Opportunity opp = [
             SELECT Id
             FROM Opportunity
             LIMIT 1
         ];
         
-        // Create Opportunity Document
         Opportunity_Document__c doc =
             new Opportunity_Document__c(
             Opportunity__c = opp.Id,
@@ -104,22 +96,19 @@ private class ListingDocumentsControllerTest {
         
         Test.stopTest();
         
-        // Verify document is returned
         System.assertEquals(1, docs.size());
     }
     
-    // Test linkFileToOpportunityDocument() method
+    // Test linkFileToOpportunityDocument()
     @isTest
     static void testLinkFileToOpportunityDocument() {
         
-        // Get test opportunity
         Opportunity opp = [
             SELECT Id
             FROM Opportunity
             LIMIT 1
         ];
         
-        // Create Opportunity Document
         Opportunity_Document__c doc =
             new Opportunity_Document__c(
             Opportunity__c = opp.Id,
@@ -130,7 +119,7 @@ private class ListingDocumentsControllerTest {
         
         insert doc;
         
-        // Create a test Salesforce File
+        // Create test file
         ContentVersion cv = new ContentVersion(
             Title = 'Test File',
         PathOnClient = 'Test.pdf',
@@ -139,7 +128,6 @@ private class ListingDocumentsControllerTest {
         
         insert cv;
         
-        // Get ContentDocumentId from ContentVersion
         cv = [
             SELECT ContentDocumentId
             FROM ContentVersion
@@ -148,7 +136,6 @@ private class ListingDocumentsControllerTest {
         
         Test.startTest();
         
-        // Link File with Opportunity Document
         ListingDocumentsController.linkFileToOpportunityDocument(
             cv.ContentDocumentId,
         doc.Id
@@ -156,7 +143,6 @@ private class ListingDocumentsControllerTest {
         
         Test.stopTest();
         
-        // Verify ContentDocumentLink is created
         ContentDocumentLink cdl = [
             SELECT Id,
                    LinkedEntityId,
