@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Document_Type__c</fullName>
+    <label>Document Type</label>
+    <required>true</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Sale Deed</fullName>
+                <default>false</default>
+                <label>Sale Deed</label>
+            </value>
+            <value>
+                <fullName>No Due Certificate</fullName>
+                <default>false</default>
+                <label>No Due Certificate</label>
+            </value>
+            <value>
+                <fullName>Floor Plan</fullName>
+                <default>false</default>
+                <label>Floor Plan</label>
+            </value>
+            <value>
+                <fullName>Occupancy Certificate</fullName>
+                <default>false</default>
+                <label>Occupancy Certificate</label>
+            </value>
+            <value>
+                <fullName>Property Tax Receipt</fullName>
+                <default>false</default>
+                <label>Property Tax Receipt</label>
+            </value>
+            <value>
+                <fullName>Electricity Bill</fullName>
+                <default>false</default>
+                <label>Electricity Bill</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
