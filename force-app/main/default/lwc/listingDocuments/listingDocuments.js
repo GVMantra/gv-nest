@@ -8,28 +8,40 @@ import linkFileToOpportunityDocument from '@salesforce/apex/ListingDocumentsCont
 
 export default class ListingDocuments extends LightningElement {
 
+    // Current Opportunity Record Id
     @api recordId;
 
+    // Stores document types, uploaded documents and data displayed in the table
     documentTypes = [];
     uploadedDocuments = [];
     displayDocuments = [];
 
+    // Stores selected document type for upload
     selectedDocumentType;
+
+    // Controls upload modal visibility
     showUploadModal = false;
 
+    // Stores wired result for refreshApex
     wiredOpportunityDocumentsResult;
 
+    // Fetch all active document types
     @wire(getDocumentTypes)
     wiredDocumentTypes({ data, error }) {
 
         if (data) {
+
             this.documentTypes = data;
             this.prepareDisplayDocuments();
+
         } else if (error) {
+
             console.error(error);
+
         }
     }
 
+    // Fetch uploaded documents for the current Opportunity
     @wire(getOpportunityDocuments, { opportunityId: '$recordId' })
     wiredOpportunityDocuments(result) {
 
@@ -38,9 +50,6 @@ export default class ListingDocuments extends LightningElement {
         const { data, error } = result;
 
         if (data) {
-
-            console.log('Wire Fired');
-            console.log(data);
 
             this.uploadedDocuments = data;
 
@@ -53,6 +62,7 @@ export default class ListingDocuments extends LightningElement {
         }
     }
 
+    // Prepare document data for displaying in the table
     prepareDisplayDocuments() {
 
         if (!this.documentTypes.length) {
@@ -61,6 +71,7 @@ export default class ListingDocuments extends LightningElement {
 
         this.displayDocuments = this.documentTypes.map(doc => {
 
+            // Find the latest uploaded document for each document type
             const uploaded = this.uploadedDocuments
                 .filter(item => item.Document_Type__c === doc.Document_Type__c)
                 .sort((a, b) => new Date(b.Uploaded_On__c) - new Date(a.Uploaded_On__c))[0];
@@ -82,6 +93,7 @@ export default class ListingDocuments extends LightningElement {
                         ? uploaded.Uploaded_By__r.Name
                         : '',
 
+                // Store ContentDocumentId for download
                 downloadId:
                     uploaded &&
                     uploaded.ContentDocumentLinks &&
@@ -89,6 +101,7 @@ export default class ListingDocuments extends LightningElement {
                         ? uploaded.ContentDocumentLinks[0].ContentDocumentId
                         : null,
 
+                // Determines whether a file is available for download
                 hasFile:
                     uploaded &&
                     uploaded.ContentDocumentLinks &&
@@ -100,6 +113,7 @@ export default class ListingDocuments extends LightningElement {
 
     }
 
+    // Opens the upload modal for the selected document type
     handleUploadClick(event) {
 
         this.selectedDocumentType = event.target.dataset.document;
@@ -108,12 +122,14 @@ export default class ListingDocuments extends LightningElement {
 
     }
 
+    // Closes the upload modal
     handleCancel() {
 
         this.showUploadModal = false;
 
     }
 
+    // Creates Opportunity Document record and links uploaded file
     async handleUploadFinished(event) {
 
         try {
@@ -122,8 +138,7 @@ export default class ListingDocuments extends LightningElement {
 
             for (const file of uploadedFiles) {
 
-                console.log('Uploading:', file.name);
-
+                // Create Opportunity Document record
                 const opportunityDocumentId = await createOpportunityDocument({
 
                     opportunityId: this.recordId,
@@ -131,6 +146,7 @@ export default class ListingDocuments extends LightningElement {
 
                 });
 
+                // Link uploaded Salesforce File with Opportunity Document
                 await linkFileToOpportunityDocument({
 
                     contentDocumentId: file.documentId,
@@ -140,15 +156,14 @@ export default class ListingDocuments extends LightningElement {
 
             }
 
+            // Close upload modal
             this.showUploadModal = false;
 
-            // Wait briefly so Salesforce commits the records
+            // Wait briefly to ensure records are committed
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            // Refresh the wired Apex data
+            // Refresh uploaded document data
             await refreshApex(this.wiredOpportunityDocumentsResult);
-
-            console.log('Component Refreshed');
 
         } catch (error) {
 
@@ -158,6 +173,7 @@ export default class ListingDocuments extends LightningElement {
 
     }
 
+    // Downloads the uploaded Salesforce File
     handleDownload(event) {
 
         const documentId = event.target.dataset.id;
