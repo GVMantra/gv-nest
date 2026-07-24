@@ -409,7 +409,7 @@
             </styleProperties>
         </fields>
         <showFooter>true</showFooter>
-        <showHeader>true</showHeader>
+        <showHeader>false</showHeader>
     </screens>
     <screens>
         <name>Error_Screen</name>
@@ -433,7 +433,7 @@
             </styleProperties>
         </fields>
         <showFooter>true</showFooter>
-        <showHeader>true</showHeader>
+        <showHeader>false</showHeader>
     </screens>
     <screens>
         <name>Success_Screen</name>
@@ -445,7 +445,7 @@
         <allowPause>true</allowPause>
         <fields>
             <name>txt_SuccessMessage</name>
-            <fieldText>&lt;p&gt;Success! The selected units have been successfully associated with this valuation.&lt;/p&gt;</fieldText>
+            <fieldText>&lt;p&gt;&lt;span style=&quot;font-size: 16px; color: rgb(8, 244, 11);&quot;&gt;Success! The selected units have been successfully associated with this valuation.&lt;/span&gt;&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
             <styleProperties>
                 <verticalAlignment>
@@ -457,7 +457,7 @@
             </styleProperties>
         </fields>
         <showFooter>true</showFooter>
-        <showHeader>true</showHeader>
+        <showHeader>false</showHeader>
     </screens>
     <screens>
         <name>Valuation_Screen_Flow_For_Unit</name>
@@ -558,7 +558,7 @@
             </styleProperties>
         </fields>
         <showFooter>true</showFooter>
-        <showHeader>true</showHeader>
+        <showHeader>false</showHeader>
     </screens>
     <start>
         <locationX>0</locationX>
