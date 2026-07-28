@@ -1,0 +1,32 @@
+<html>
+<head>
+	<title></title>
+</head>
+<body style="height: auto; min-height: auto;"><img alt="ChatGPT Image Jul 28, 2026, 02_03_58 PM" src="https://orgfarm-4d231c31b9-dev-ed.develop.my.salesforce.com/sfc/dist/version/renditionDownload?rendition=ORIGINAL_Png&amp;versionId=068fj00000BpTL0&amp;operationContext=DELIVERY&amp;contentId=05Tfj00000JN1eu&amp;page=0&amp;d=/a/fj000000CxU9/6Lubf_y6tL6NaZLLLJOMa.fTs2aSkLvwsTca6toSQ68&amp;oid=00Dfj00000UxlMb&amp;dpt=null&amp;viewId=" style="max-width: 1281.48px; width: 824.472px; height: 412px;" title="ChatGPT Image Jul 28, 2026, 02_03_58 PM" /><br />
+Dear {{{Interested_Buyer__c.Buyer_Name__c}}},<br />
+<br />
+Great news! Your offer for the property at&nbsp; has been officially ACCEPTED.<br />
+<br />
+Offer Details:<br />
+--------------------------------------------------<br />
+• Offered Amount: {{{Interested_Buyer__c.Offered_Amount__c}}}<br />
+• Status: {{{Interested_Buyer__c.Status__c}}}<br />
+&nbsp;•Deal :&nbsp; {{{Interested_Buyer__c.Opportunity__c}}}<br />
+--------------------------------------------------<br />
+<br />
+Our sales team will follow up with you shortly regarding the next steps for contracts and escrow.<br />
+<br />
+<br />
+Best regards, &nbsp;<br />
+Real Estate Sales Team<br />
+<img alt="ChatGPT Image Jul 28, 2026, 02_06_33 PM" src="https://orgfarm-4d231c31b9-dev-ed.develop.my.salesforce.com/sfc/dist/version/renditionDownload?rendition=ORIGINAL_Png&amp;versionId=068fj00000BpcMi&amp;operationContext=DELIVERY&amp;contentId=05Tfj00000JNOhs&amp;page=0&amp;d=/a/fj000000CxVl/8gWBW3843mqo76aY21E7zSgjNCBk2Nw1kSYa3WQoVbs&amp;oid=00Dfj00000UxlMb&amp;dpt=null&amp;viewId=" style="max-width: 1281.48px; width: 828px; height: 340.736px;" title="ChatGPT Image Jul 28, 2026, 02_06_33 PM" /><br />
+&nbsp;
+<div id="" style="left: 8px; top: 723.111px;">&nbsp;</div>
+
+<div id="" style="left: 8px; top: 723.111px;">&nbsp;</div>
+
+<div id="" style="left: 8px; top: 8px;">&nbsp;</div>
+
+<div id="" style="left: 8px; top: 8px;">&nbsp;</div>
+</body>
+</html>

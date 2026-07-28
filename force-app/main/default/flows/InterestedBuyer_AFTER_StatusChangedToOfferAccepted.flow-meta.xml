@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Send_Email_To_Buyer</name>
+        <label>Send Email To Buyer</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>CurrentUser</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <elementReference>$User.Email</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>useEmailTemplate</name>
+            <value>
+                <stringValue>True</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailTemplateName</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <setupReference>unfiled$public/Offer_Accepted_Notification_1785149294590</setupReference>
+                <setupReferenceType>EmailTemplate</setupReferenceType>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>attachmentId</name>
+        </inputParameters>
+        <inputParameters>
+            <name>recipientId</name>
+            <value>
+                <elementReference>Get_First_Contact.Id</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>logEmailOnSend</name>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionString>3.0.1</versionString>
+    </actionCalls>
+    <apiVersion>67.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <customErrors>
+        <name>Status_Error</name>
+        <label>Status Error</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <customErrorMessages>
+            <errorMessage>Offer has been Accepted Already</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <decisions>
+        <name>Check_Interested_Buyer_Status</name>
+        <label>Check Interested Buyer Status</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Status_Error</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Equal Offer Accepted</defaultConnectorLabel>
+        <rules>
+            <name>Not_Equal_Offer_Accepted</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Related_Interested_Buyer</leftValueReference>
+                <operator>IsEmpty</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_related_Opportunity</targetReference>
+            </connector>
+            <label>Not Equal Offer Accepted</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <interviewLabel>InterestedBuyer-AFTER-StatusChangedToOfferAccepted {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>InterestedBuyer-AFTER-StatusChangedToOfferAccepted</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_First_Contact</name>
+        <label>Get First Contact</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Send_Email_To_Buyer</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>AccountId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Buyer_Account__c</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Contact</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Related_Interested_Buyer</name>
+        <label>Get Related Interested Buyer</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Check_Interested_Buyer_Status</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Opportunity__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Opportunity__c</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Status__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Offer Accepted</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Id</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>Interested_Buyer__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <name>Update_related_Opportunity</name>
+        <label>Update related Opportunity</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_First_Contact</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Accepted_Buyer__c</field>
+            <value>
+                <elementReference>$Record.Buyer_Account__c</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Amount</field>
+            <value>
+                <elementReference>$Record.Offered_Amount__c</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record.Opportunity__r</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_Related_Interested_Buyer</targetReference>
+        </connector>
+        <filterFormula>ISPICKVAL({!$Record.Status__c}, &quot;Offer Accepted&quot;) &amp;&amp; (ISNEW() || ISCHANGED({!$Record.Status__c}))</filterFormula>
+        <object>Interested_Buyer__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>Email_Body</name>
+        <isViewedAsPlainText>false</isViewedAsPlainText>
+        <text>&lt;p&gt;&amp;lt;!-- HEADER IMAGE --&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;img src=&quot;https://share.google/rdvTqyraCpGtummfz&quot; width=&quot;100%&quot; style=&quot;max-width:600px; height:auto; display:block; margin-bottom:20px;&quot; alt=&quot;Header Banner&quot;&amp;gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&amp;lt;p&amp;gt;Dear {!Get_First_Contact.FirstName},&amp;lt;/p&amp;gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&amp;lt;p&amp;gt;Great news! Your offer for the property at &amp;lt;b&amp;gt;{!$Record.Opportunity__r.Name}&amp;lt;/b&amp;gt; has been officially ACCEPTED.&amp;lt;/p&amp;gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&amp;lt;p&amp;gt;&amp;lt;b&amp;gt;Offer Details:&amp;lt;/b&amp;gt;&amp;lt;/p&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;ul&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp;&amp;lt;li&amp;gt;&amp;lt;b&amp;gt;Property:&amp;lt;/b&amp;gt; {!$Record.Opportunity__r.Name}&amp;lt;/li&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp;&amp;lt;li&amp;gt;&amp;lt;b&amp;gt;Offered Amount:&amp;lt;/b&amp;gt; ${!$Record.Offered_Amount__c}&amp;lt;/li&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp;&amp;lt;li&amp;gt;&amp;lt;b&amp;gt;Status:&amp;lt;/b&amp;gt; {!$Record.Status__c}&amp;lt;/li&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/ul&amp;gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&amp;lt;p&amp;gt;Our sales team will follow up with you shortly regarding the next steps.&amp;lt;/p&amp;gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&amp;lt;p&amp;gt;Best regards,&amp;lt;br&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;b&amp;gt;Real Estate Sales Team&amp;lt;/b&amp;gt;&amp;lt;/p&amp;gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&amp;lt;br&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;!-- FOOTER IMAGE --&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;img src=&quot;https://share.google/uU2L2nE2HpwA2sD8o&quot; width=&quot;100%&quot; style=&quot;max-width:600px; height:auto; display:block; margin-top:20px;&quot; alt=&quot;Footer Banner&quot;&amp;gt;&lt;/p&gt;</text>
+    </textTemplates>
+    <textTemplates>
+        <name>Email_Body1</name>
+        <isViewedAsPlainText>false</isViewedAsPlainText>
+        <text>&lt;!-- HEADER IMAGE --&gt;
+&lt;img src=&quot;https://orgfarm-4d231c31b9-dev-ed.develop.my.salesforce.com/sfc/p/fj00000UxlMb/a/fj000000Cwuf/8WYtNGCTbZi40UbtQucDltkOPbBgI4ioTb3kVzDf4WI&quot; alt=&quot;Header Banner&quot;&gt;
+
+&lt;p&gt;Dear {!Get_First_Contact.FirstName},&lt;/p&gt;
+
+&lt;p&gt;Great news! Your offer for the property at &lt;b&gt;{!$Record.Opportunity__r.Name}&lt;/b&gt; has been officially ACCEPTED.&lt;/p&gt;
+
+&lt;p&gt;&lt;b&gt;Offer Details:&lt;/b&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;b&gt;Property:&lt;/b&gt; {!$Record.Opportunity__r.Name}&lt;/li&gt;
+  &lt;li&gt;&lt;b&gt;Offered Amount:&lt;/b&gt; ${!$Record.Offered_Amount__c}&lt;/li&gt;
+  &lt;li&gt;&lt;b&gt;Status:&lt;/b&gt; {!$Record.Status__c}&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Our sales team will follow up with you shortly regarding the next steps.&lt;/p&gt;
+
+&lt;p&gt;Best regards,&lt;br&gt;
+&lt;b&gt;Real Estate Sales Team&lt;/b&gt;&lt;/p&gt;
+
+&lt;br&gt;
+&lt;!-- FOOTER IMAGE --&gt;
+&lt;img src=&quot;https://orgfarm-4d231c31b9-dev-ed.develop.my.salesforce.com/sfc/p/fj00000UxlMb/a/fj000000CwwH/gagovWBjzbeA17o0EV_meNq.OkduIru.l0XPxlDZctQ&quot; alt=&quot;Footer Banner&quot;&gt;</text>
+    </textTemplates>
+</Flow>

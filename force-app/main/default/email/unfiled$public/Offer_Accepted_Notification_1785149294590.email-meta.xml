@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>UTF-8</encodingKey>
+    <name>Offer Accepted Notification</name>
+    <relatedEntityType>Interested_Buyer__c</relatedEntityType>
+    <style>none</style>
+    <subject>Great News! Your Offer Has Been Accepted</subject>
+    <type>custom</type>
+    <uiType>SFX</uiType>
+</EmailTemplate>
