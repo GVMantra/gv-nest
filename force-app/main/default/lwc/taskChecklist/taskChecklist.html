@@ -1,0 +1,75 @@
+<template>
+    <lightning-card title="Task Checklist" icon-name="standard:task">
+
+        <div class="task-list">
+
+            <template for:each={tasks} for:item="task">
+                <div key={task.Id} class={task.cssClass}>
+                    <template if:true={task.isProcessing}>
+                        <div class="task-spinner-container">
+                            <lightning-spinner
+                                alternative-text="Updating task status"
+                                size="small">
+                            </lightning-spinner>
+                        </div>
+                    </template>
+
+                    <div class="task-header">
+                        <div class="task-info">
+                            <a href={task.taskUrl}
+                                class="task-subject"
+                                data-id={task.Id}
+                                onclick={handleTaskClick}>{task.Subject}</a>
+                            <span class="task-assignee">{task.assignmentLabel}</span>
+                            <div class="task-due">
+                                Due Date: {task.dueDateFormatted} &nbsp;({task.Status})
+                            </div>
+                        </div>
+
+                        <template if:true={task.showActionsRow}>
+                            <div class="task-actions">
+                                <template if:true={task.showCompleteButton}>
+                                    <lightning-button-icon
+                                        icon-name="utility:check"
+                                        variant="border-filled"
+                                        class="slds-m-right_x-small"
+                                        data-id={task.Id}
+                                        disabled={task.isProcessing}
+                                        onclick={handleComplete}
+                                        alternative-text="Mark Complete">
+                                    </lightning-button-icon>
+                                </template>
+
+                                <template if:true={task.showPlayButton}>
+                                    <lightning-button-icon
+                                        icon-name="utility:play"
+                                        variant="border-filled"
+                                        class="slds-m-right_x-small"
+                                        data-id={task.Id}
+                                        disabled={task.isProcessing}
+                                        onclick={handlePlay}
+                                        alternative-text="Mark In Progress">
+                                    </lightning-button-icon>
+                                </template>
+
+                                <lightning-button-icon
+                                    icon-name="utility:edit"
+                                    variant="border-filled"
+                                    data-id={task.Id}
+                                    disabled={task.isProcessing}
+                                    onclick={handleEditClick}
+                                    alternative-text="Edit">
+                                </lightning-button-icon>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <template if:true={noTasks}>
+                <p class="slds-p-around_medium slds-text-color_weak">No tasks found for this opportunity.</p>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>
