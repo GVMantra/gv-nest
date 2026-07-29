@@ -97,6 +97,35 @@
             <label>Not Equal Offer Accepted</label>
         </rules>
     </decisions>
+    <decisions>
+        <name>Does_Email_Exist</name>
+        <label>Does Email Exist</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>No</defaultConnectorLabel>
+        <rules>
+            <name>Yes</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_First_Contact.Email</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>Get_First_Contact.Id</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Send_Email_To_Buyer</targetReference>
+            </connector>
+            <label>Yes</label>
+        </rules>
+    </decisions>
     <environments>Default</environments>
     <interviewLabel>InterestedBuyer-AFTER-StatusChangedToOfferAccepted {!$Flow.CurrentDateTime}</interviewLabel>
     <label>InterestedBuyer-AFTER-StatusChangedToOfferAccepted</label>
@@ -126,7 +155,7 @@
         <locationY>0</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Send_Email_To_Buyer</targetReference>
+            <targetReference>Does_Email_Exist</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
