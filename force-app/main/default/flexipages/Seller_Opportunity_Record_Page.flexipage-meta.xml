@@ -373,6 +373,12 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>buyerForm</componentName>
+                <identifier>c_buyerForm</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
                 </componentInstanceProperties>
@@ -569,6 +575,13 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab4</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!$User.Profile.Name}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Read Only</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>
