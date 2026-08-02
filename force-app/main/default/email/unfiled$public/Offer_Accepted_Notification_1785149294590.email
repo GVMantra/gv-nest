@@ -2,16 +2,17 @@
 <head>
 	<title></title>
 </head>
-<body style="height: auto; min-height: auto;"><img alt="ChatGPT Image Jul 28, 2026, 02_03_58 PM" class="" src="https://orgfarm-4d231c31b9-dev-ed.develop.my.salesforce.com/sfc/dist/version/renditionDownload?rendition=ORIGINAL_Png&amp;versionId=068fj00000BpTL0&amp;operationContext=DELIVERY&amp;contentId=05Tfj00000JN1eu&amp;page=0&amp;d=/a/fj000000CxU9/6Lubf_y6tL6NaZLLLJOMa.fTs2aSkLvwsTca6toSQ68&amp;oid=00Dfj00000UxlMb&amp;dpt=null&amp;viewId=" style="max-width: 1281.48px; width: 646px; height: 298px;" title="ChatGPT Image Jul 28, 2026, 02_03_58 PM" /><br />
-Dear {{{Interested_Buyer__c.Name}}}<br />
+<body style="height: auto; min-height: auto;"><img alt="ChatGPT Image Jul 28, 2026, 02_03_58 PM" src="https://orgfarm-4d231c31b9-dev-ed.develop.my.salesforce.com/sfc/dist/version/renditionDownload?rendition=ORIGINAL_Png&amp;versionId=068fj00000BpTL0&amp;operationContext=DELIVERY&amp;contentId=05Tfj00000JN1eu&amp;page=0&amp;d=/a/fj000000CxU9/6Lubf_y6tL6NaZLLLJOMa.fTs2aSkLvwsTca6toSQ68&amp;oid=00Dfj00000UxlMb&amp;dpt=null&amp;viewId=" style="max-width: 1281.48px; width: 646px; height: 298px;" title="ChatGPT Image Jul 28, 2026, 02_03_58 PM" /><br />
+Dear {{{Recipient.Name}}}<br />
 <br />
 Great news! Your offer for the property at&nbsp; has been officially ACCEPTED.<br />
 <br />
 Offer Details:<br />
 --------------------------------------------------<br />
+• Deal :&nbsp; {{{Interested_Buyer__c.Opportunity__c}}}<br />
 • Offered Amount: {{{Interested_Buyer__c.Offered_Amount__c}}}<br />
 • Status: {{{Interested_Buyer__c.Status__c}}}<br />
-&nbsp;•Deal :&nbsp; {{{Interested_Buyer__c.Opportunity__c}}}<br />
+<br />
 --------------------------------------------------<br />
 <br />
 Our sales team will follow up with you shortly regarding the next steps for contracts and escrow.<br />
@@ -28,8 +29,6 @@ Real Estate Sales Team<br />
 <div id="" style="left: 8px; top: 8px;">&nbsp;</div>
 
 <div id="" style="left: 8px; top: 8px;">&nbsp;</div>
-
-
 
 <div id="" style="left: 8px; top: 8px;">&nbsp;</div>
 
