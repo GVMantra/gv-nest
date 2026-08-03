@@ -264,7 +264,7 @@
                 <elementReference>campaign_member_status_doc_req.Label</elementReference>
             </value>
         </filters>
-        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
         <object>CampaignMemberStatus</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
