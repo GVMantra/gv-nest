@@ -19,8 +19,38 @@
         </connector>
     </assignments>
     <assignments>
-        <name>Assign_to_Opportunity_Unit_Collection</name>
-        <label>Assign to Opportunity Unit Collection</label>
+        <name>Assign_OpportunityUnit</name>
+        <label>Assign OpportunityUnit</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>Single_OpportunityUnit.Unit__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Loop_through_Unit_Valuation.Unit__c</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>Single_OpportunityUnit.Opportunity__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>OpportunityUnit_Collection</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>Single_OpportunityUnit</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Loop_through_Unit_Valuation</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>Assign_to_Opportunity_Valuation_Collection</name>
+        <label>Assign to Opportunity Valuation Collection</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <assignmentItems>
@@ -46,6 +76,22 @@
         </assignmentItems>
         <connector>
             <targetReference>Loop_Through_Selected_Valuations</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>Assign_ValuationIdsNew</name>
+        <label>Assign ValuationIdsNew</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>ValuationIdsNew</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>Loop_Through_Selected_Valuations.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Assign_to_Opportunity_Valuation_Collection</targetReference>
         </connector>
     </assignments>
     <assignments>
@@ -146,7 +192,21 @@
         <collectionReference>All_Available_Units.selectedRows</collectionReference>
         <iterationOrder>Asc</iterationOrder>
         <nextValueConnector>
-            <targetReference>Assign_to_Opportunity_Unit_Collection</targetReference>
+            <targetReference>Assign_ValuationIdsNew</targetReference>
+        </nextValueConnector>
+        <noMoreValuesConnector>
+            <targetReference>Get_Unit_Valuation</targetReference>
+        </noMoreValuesConnector>
+    </loops>
+    <loops>
+        <name>Loop_through_Unit_Valuation</name>
+        <label>Loop through Unit Valuation</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <collectionReference>Get_Unit_Valuation</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Assign_OpportunityUnit</targetReference>
         </nextValueConnector>
         <noMoreValuesConnector>
             <targetReference>Create_Opportunity_Valuations</targetReference>
@@ -172,12 +232,22 @@
     </processMetadataValues>
     <processType>Flow</processType>
     <recordCreates>
+        <name>Create_Opportunity_Unit</name>
+        <label>Create Opportunity Unit</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Success_Screen</targetReference>
+        </connector>
+        <inputReference>OpportunityUnit_Collection</inputReference>
+    </recordCreates>
+    <recordCreates>
         <name>Create_Opportunity_Valuations</name>
         <label>Create Opportunity Valuations</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>Success_Screen</targetReference>
+            <targetReference>Create_Opportunity_Unit</targetReference>
         </connector>
         <inputReference>OpportuntiyValuations</inputReference>
     </recordCreates>
@@ -251,6 +321,27 @@
         <object>Opportunity_Valuation__c</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
+    <recordLookups>
+        <name>Get_Unit_Valuation</name>
+        <label>Get Unit Valuation</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Loop_through_Unit_Valuation</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Valuation__c</field>
+            <operator>In</operator>
+            <value>
+                <elementReference>ValuationIdsNew</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>Unit_Valuation__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
     <screens>
         <name>Associate_Valuations</name>
         <label>Associate Valuations</label>
@@ -261,7 +352,7 @@
         <allowPause>true</allowPause>
         <fields>
             <name>Display_Message</name>
-            <fieldText>&lt;p&gt;&lt;span style=&quot;color: rgb(234, 48, 6); font-size: 16px;&quot;&gt;Either the Valuations have been Associated or Not Available for this Opportunity&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldText>&lt;p&gt;&lt;span style=&quot;font-size: 16px; color: rgb(234, 48, 6);&quot;&gt;Either the Valuations have been Associated or Not Available for this Opportunity and check if opportunity is linked to seller account&lt;/span&gt;&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
             <styleProperties>
                 <verticalAlignment>
@@ -409,6 +500,14 @@
     </start>
     <status>Active</status>
     <variables>
+        <name>OpportunityUnit_Collection</name>
+        <dataType>SObject</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Opportunity_Unit__c</objectType>
+    </variables>
+    <variables>
         <name>OpportuntiyValuations</name>
         <dataType>SObject</dataType>
         <isCollection>true</isCollection>
@@ -424,6 +523,14 @@
         <isOutput>false</isOutput>
     </variables>
     <variables>
+        <name>Single_OpportunityUnit</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Opportunity_Unit__c</objectType>
+    </variables>
+    <variables>
         <name>SingleOpportunityValuation</name>
         <dataType>SObject</dataType>
         <isCollection>false</isCollection>
@@ -433,6 +540,13 @@
     </variables>
     <variables>
         <name>ValuationIds</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>ValuationIdsNew</name>
         <dataType>String</dataType>
         <isCollection>true</isCollection>
         <isInput>false</isInput>
