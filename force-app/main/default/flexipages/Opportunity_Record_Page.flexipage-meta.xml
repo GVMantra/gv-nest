@@ -12,16 +12,7 @@
                         <valueListItems>
                             <value>FeedItem.ContentPost</value>
                         </valueListItems>
-                        <valueListItems>
-                            <value>Opportunity.Associate_Units</value>
-                            <visibilityRule>
-                                <criteria>
-                                    <leftValue>{!Record.StageName}</leftValue>
-                                    <operator>NE</operator>
-                                    <rightValue>Closed Won</rightValue>
-                                </criteria>
-                            </visibilityRule>
-                        </valueListItems>
+                       
                         <valueListItems>
                             <value>Global.NewTask</value>
                         </valueListItems>
