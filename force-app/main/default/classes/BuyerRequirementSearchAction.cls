@@ -70,15 +70,15 @@ public with sharing class BuyerRequirementSearchAction {
             bindVariables.put('gymRequired', req.gymRequired);
         }
 
-        if (req.minimumBudget != null) {
-            query += ' AND Maximum_Budget__c >= :minimumBudget';
-             bindVariables.put('minimumBudget', req.minimumBudget);
-         }
+        if (req.maximumBudget != null) {
+            query += ' AND (Minimum_Budget__c = NULL OR Minimum_Budget__c <= :maximumBudget)';
+            bindVariables.put('maximumBudget', req.maximumBudget);
+          }
 
-if (req.maximumBudget != null) {
-            query += ' AND Minimum_Budget__c <= :maximumBudget';
-             bindVariables.put('maximumBudget', req.maximumBudget);
-         }
+        if (req.minimumBudget != null) {
+            query += ' AND (Maximum_Budget__c = NULL OR Maximum_Budget__c >= :minimumBudget)';
+            bindVariables.put('minimumBudget', req.minimumBudget);
+           }
 
         if (req.minimumBathrooms != null) {
             query += ' AND Minimum_Bathrooms__c >= :minimumBathrooms';
