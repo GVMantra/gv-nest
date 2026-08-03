@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Valuation_ExpiryDate_After_ValuationDate</fullName>
+    <active>true</active>
+    <description>This Rule is for checking that expiry date cannot be earlier then Valuation date</description>
+    <errorConditionFormula>Valuation_Date__c &gt;  Expiry_Date__c</errorConditionFormula>
+    <errorMessage>Expiry Date cannot be earlier than Valuation Date.</errorMessage>
+</ValidationRule>
