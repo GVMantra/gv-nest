@@ -6,7 +6,7 @@
     <referenceTo>Buyer_Requirement__c</referenceTo>
     <relationshipLabel>Interested Buyers</relationshipLabel>
     <relationshipName>Interested_Buyers</relationshipName>
-    <required>true</required>
+    <required>false</required>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
