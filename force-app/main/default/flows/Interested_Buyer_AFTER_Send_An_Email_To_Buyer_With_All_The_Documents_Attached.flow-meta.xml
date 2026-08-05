@@ -18,7 +18,7 @@
         <inputParameters>
             <name>opportunityId</name>
             <value>
-                <elementReference>Get_Related_Opportunity.Id</elementReference>
+                <elementReference>$Record.Opportunity__c</elementReference>
                 <inputConfiguratorMode>Resource</inputConfiguratorMode>
             </value>
         </inputParameters>
@@ -27,11 +27,34 @@
     </actionCalls>
     <apiVersion>67.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <customErrors>
+        <name>Documents_Not_Found</name>
+        <label>Documents Not Found</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <customErrorMessages>
+            <errorMessage>No documents were found for this opportunity. Please upload the required documents before sending the email.</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <customErrors>
+        <name>No_Contact_Found</name>
+        <label>No Contact Found</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <customErrorMessages>
+            <errorMessage>No contact with an email address was found for the selected buyer account.</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
     <decisions>
         <name>Check_Buyer_Contact</name>
         <label>Check Buyer Contact</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>No_Contact_Found</targetReference>
+        </defaultConnector>
         <defaultConnectorLabel>No Contact found</defaultConnectorLabel>
         <rules>
             <name>Check_Buyer_Contact_and_Email</name>
@@ -61,7 +84,10 @@
         <label>Check Documents Available</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
-        <defaultConnectorLabel>Documents Found</defaultConnectorLabel>
+        <defaultConnector>
+            <targetReference>Documents_Not_Found</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Documents Not  Found</defaultConnectorLabel>
         <rules>
             <name>Documents_Found</name>
             <conditionLogic>and</conditionLogic>
@@ -76,28 +102,6 @@
                 <targetReference>Get_Buyer_Documents_Email_Template</targetReference>
             </connector>
             <label>Documents Found</label>
-        </rules>
-    </decisions>
-    <decisions>
-        <name>Check_Opportunity_Available</name>
-        <label>Check Opportunity Available</label>
-        <locationX>0</locationX>
-        <locationY>0</locationY>
-        <defaultConnectorLabel>Opportunity  Not  Found</defaultConnectorLabel>
-        <rules>
-            <name>Opportunity_Found</name>
-            <conditionLogic>and</conditionLogic>
-            <conditions>
-                <leftValueReference>Get_Related_Opportunity.Id</leftValueReference>
-                <operator>IsNull</operator>
-                <rightValue>
-                    <booleanValue>false</booleanValue>
-                </rightValue>
-            </conditions>
-            <connector>
-                <targetReference>Get_Buyer_Contact</targetReference>
-            </connector>
-            <label>Opportunity Found</label>
         </rules>
     </decisions>
     <environments>Default</environments>
@@ -136,7 +140,7 @@
             <field>AccountId</field>
             <operator>EqualTo</operator>
             <value>
-                <elementReference>Get_Related_Opportunity.Accepted_Buyer__c</elementReference>
+                <elementReference>$Record.Buyer_Account__c</elementReference>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
@@ -178,39 +182,18 @@
             <field>Opportunity__c</field>
             <operator>EqualTo</operator>
             <value>
-                <elementReference>Get_Related_Opportunity.Id</elementReference>
+                <elementReference>$Record.Opportunity__c</elementReference>
             </value>
         </filters>
         <getFirstRecordOnly>false</getFirstRecordOnly>
         <object>Opportunity_Document__c</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
-    <recordLookups>
-        <name>Get_Related_Opportunity</name>
-        <label>Get Related Opportunity</label>
-        <locationX>0</locationX>
-        <locationY>0</locationY>
-        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
-        <connector>
-            <targetReference>Check_Opportunity_Available</targetReference>
-        </connector>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>Id</field>
-            <operator>EqualTo</operator>
-            <value>
-                <elementReference>$Record.Opportunity__c</elementReference>
-            </value>
-        </filters>
-        <getFirstRecordOnly>true</getFirstRecordOnly>
-        <object>Opportunity</object>
-        <storeOutputAutomatically>true</storeOutputAutomatically>
-    </recordLookups>
     <start>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>Get_Related_Opportunity</targetReference>
+            <targetReference>Get_Buyer_Contact</targetReference>
         </connector>
         <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
         <filterLogic>and</filterLogic>

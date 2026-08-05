@@ -9,98 +9,104 @@ public with sharing class BuyerDocumentEmailService {
         
         for (Request req : requests) {
             
-            // Negative scenario:
-            // Opportunity Id or Email Template Id is missing
+            // Negative scenario
             if (req == null ||
                 req.opportunityId == null ||
             req.emailTemplateId == null) {
                 continue;
             }
             
-            // Get Opportunity and Accepted Buyer Account
+            
+            // Get Opportunity
             List<Opportunity> opportunities = [
-                SELECT Id,
-                       Accepted_Buyer__c
+                SELECT Id
                 FROM Opportunity
                 WHERE Id = :req.opportunityId
                 LIMIT 1
             ];
             
-            // Negative scenario:
-            // Opportunity does not exist
             if (opportunities.isEmpty()) {
                 continue;
             }
             
             Opportunity opp = opportunities[0];
             
-            // Negative scenario:
-            // Accepted Buyer is not available
-            if (opp.Accepted_Buyer__c == null) {
+            
+            // Get Buyer Account from Interested Buyer
+            List<Interested_Buyer__c> interestedBuyers = [
+                SELECT Buyer_Account__c
+                FROM Interested_Buyer__c
+                WHERE Opportunity__c = :opp.Id
+                AND Buyer_Account__c != null
+                LIMIT 1
+            ];
+            
+            // No Buyer Account found
+            if (interestedBuyers.isEmpty()) {
                 continue;
             }
             
-            // Get a Contact with an Email from the Accepted Buyer Account
+            Id buyerAccountId = interestedBuyers[0].Buyer_Account__c;
+            
+            
+            // Get Buyer Contact
             List<Contact> contacts = [
                 SELECT Id,
                        FirstName,
                        LastName,
                        Email
                 FROM Contact
-                WHERE AccountId = :opp.Accepted_Buyer__c
+                WHERE AccountId = :buyerAccountId
                 AND Email != null
                 LIMIT 1
             ];
             
-            // Negative scenario:
-            // No Contact or no Contact Email is available
             if (contacts.isEmpty()) {
                 continue;
             }
             
             Contact buyerContact = contacts[0];
             
-            // Get all Opportunity Document records
+            
+            // Get Opportunity Documents
             List<Opportunity_Document__c> documents = [
                 SELECT Id
                 FROM Opportunity_Document__c
                 WHERE Opportunity__c = :opp.Id
             ];
             
-            // Negative scenario:
-            // No Opportunity Documents are available
             if (documents.isEmpty()) {
                 continue;
             }
             
+            
             Set<Id> documentIds = new Set<Id>();
             
-            for (Opportunity_Document__c documentRecord : documents) {
-                documentIds.add(documentRecord.Id);
+            for (Opportunity_Document__c doc : documents) {
+                documentIds.add(doc.Id);
             }
             
-            // Get Salesforce Files linked to Opportunity Documents
+            
+            // Get Files linked with documents
             List<ContentDocumentLink> fileLinks = [
                 SELECT ContentDocumentId
                 FROM ContentDocumentLink
                 WHERE LinkedEntityId IN :documentIds
             ];
             
-            // Negative scenario:
-            // No files are linked to Opportunity Documents
             if (fileLinks.isEmpty()) {
                 continue;
             }
             
+            
             Set<Id> contentDocumentIds = new Set<Id>();
             
-            for (ContentDocumentLink fileLink : fileLinks) {
-                contentDocumentIds.add(
-                    fileLink.ContentDocumentId
-                    );
+            for (ContentDocumentLink link : fileLinks) {
+                contentDocumentIds.add(link.ContentDocumentId);
             }
             
-            // Get the latest version of every file
+            
+            // Get latest file versions
             List<ContentVersion> fileVersions = [
                 SELECT Title,
                        VersionData,
@@ -110,75 +116,65 @@ public with sharing class BuyerDocumentEmailService {
                 AND IsLatest = true
             ];
             
-            // Negative scenario:
-            // No latest file version is available
             if (fileVersions.isEmpty()) {
                 continue;
             }
             
-            // Create email attachments
+            
+            // Create Attachments
             List<Messaging.EmailFileAttachment> attachments =
                 new List<Messaging.EmailFileAttachment>();
             
-            for (ContentVersion fileVersion : fileVersions) {
+            for (ContentVersion file : fileVersions) {
                 
                 Messaging.EmailFileAttachment attachment =
                     new Messaging.EmailFileAttachment();
                 
-                String fileName = fileVersion.Title;
+                String fileName = file.Title;
                 
-                if (String.isNotBlank(fileVersion.FileExtension)) {
-                    fileName +=
-                        '.' + fileVersion.FileExtension;
+                if (String.isNotBlank(file.FileExtension)) {
+                    fileName += '.' + file.FileExtension;
                 }
                 
                 attachment.setFileName(fileName);
-                attachment.setBody(fileVersion.VersionData);
+                attachment.setBody(file.VersionData);
                 
                 attachments.add(attachment);
             }
             
-            // Create email
+            
+            // Create Email
             Messaging.SingleEmailMessage email =
                 new Messaging.SingleEmailMessage();
             
-            // Use Buyer Documents Requested Email Template
             email.setTemplateId(req.emailTemplateId);
             
-            // Contact is the recipient.
-            // Contact First Name and Last Name merge fields
-            // will use this Contact record.
+            // Buyer Contact for merge fields
             email.setTargetObjectId(buyerContact.Id);
             
-            // Related Opportunity
+            // Opportunity merge fields
             email.setWhatId(opp.Id);
             
-            // Add all uploaded documents
             email.setFileAttachments(attachments);
-            
-            // Do not create an activity record
             email.setSaveAsActivity(false);
             
-            // Send email
+            
             Messaging.sendEmail(
-            new Messaging.SingleEmailMessage[] {
-                email
-            }
+            new Messaging.SingleEmailMessage[] { email }
             );
+            
+            System.debug('Buyer document email sent successfully');
         }
     }
     
     
     public class Request {
         
-        @InvocableVariable(
-        required=true
-            )
-            public Id opportunityId;
+        @InvocableVariable(required=true)
+        public Id opportunityId;
         
-        @InvocableVariable(
-        required=true
-            )
-            public Id emailTemplateId;
+        
+        @InvocableVariable(required=true)
+        public Id emailTemplateId;
     }
 }

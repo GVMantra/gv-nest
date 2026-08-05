@@ -4,52 +4,64 @@ private class BuyerDocumentEmailServiceTest {
     @IsTest
     static void testSuccessfulEmailWithDocuments() {
         
-        // Get an existing Opportunity with an Accepted Buyer
-        List<Opportunity> opportunities = [
-            SELECT Id,
-                   Accepted_Buyer__c
-            FROM Opportunity
-            WHERE Accepted_Buyer__c != null
-            LIMIT 1
-        ];
+        // Create Buyer Account
+        Account buyerAccount = new Account(
+            Name = 'Test Buyer Account'
+            );
+        insert buyerAccount;
         
-        System.assert(
-            !opportunities.isEmpty(),
-        'An Opportunity with an Accepted Buyer is required.'
+        
+        // Create Buyer Contact
+        Contact buyerContact = new Contact(
+            FirstName = 'Test',
+        LastName = 'Buyer',
+        Email = 'buyer@test.com',
+        AccountId = buyerAccount.Id
+            );
+        insert buyerContact;
+        
+        
+        // Create Opportunity
+        Opportunity opp = new Opportunity(
+            Name = 'Test Opportunity',
+        StageName = 'Prospecting',
+        CloseDate = Date.today().addDays(30),
+        AccountId = buyerAccount.Id
+            );
+        insert opp;
+        
+        
+        // Create Buyer Requirement
+        Buyer_Requirement__c buyerRequirement =
+            new Buyer_Requirement__c(
+            Account__c = buyerAccount.Id,
+        Preferred_Location__c = 'Gurgaon',
+        Maximum_Budget__c = 5000000,
+        Active__c = true
             );
         
-        Opportunity opp = opportunities[0];
+        insert buyerRequirement;
         
         
-        // Verify that the Accepted Buyer has a Contact with Email
-        List<Contact> contacts = [
-            SELECT Id,
-                   Email
-            FROM Contact
-            WHERE AccountId = :opp.Accepted_Buyer__c
-            AND Email != null
-            LIMIT 1
-        ];
-        
-        System.assert(
-            !contacts.isEmpty(),
-        'The Accepted Buyer must have a Contact with an Email.'
+        // Create Interested Buyer
+        Interested_Buyer__c interestedBuyer =
+            new Interested_Buyer__c(
+            Opportunity__c = opp.Id,
+        Buyer_Account__c = buyerAccount.Id,
+        Buyer_Requirement__c = buyerRequirement.Id,
+        Status__c = 'Documents Requested'
             );
         
+        insert interestedBuyer;
         
-        // Get the existing Email Template
-        List<EmailTemplate> templates = [
-            SELECT Id,
-                   Name
+        
+        // Get Email Template
+        EmailTemplate template = [
+            SELECT Id
             FROM EmailTemplate
             WHERE Name = 'Buyer Documents Requested'
             LIMIT 1
         ];
-        
-        System.assert(
-            !templates.isEmpty(),
-        'Buyer Documents Requested Email Template was not found.'
-            );
         
         
         // Create Opportunity Document
@@ -84,13 +96,11 @@ private class BuyerDocumentEmailServiceTest {
         ];
         
         
-        // Link File to Opportunity Document
+        // Link File with Opportunity Document
         ContentDocumentLink fileLink =
             new ContentDocumentLink(
-            ContentDocumentId =
-            fileVersion.ContentDocumentId,
-        LinkedEntityId =
-            documentRecord.Id,
+            ContentDocumentId = fileVersion.ContentDocumentId,
+        LinkedEntityId = documentRecord.Id,
         ShareType = 'V',
         Visibility = 'AllUsers'
             );
@@ -98,12 +108,12 @@ private class BuyerDocumentEmailServiceTest {
         insert fileLink;
         
         
-        // Create request for Invocable Apex
+        // Prepare Apex Request
         BuyerDocumentEmailService.Request request =
             new BuyerDocumentEmailService.Request();
         
         request.opportunityId = opp.Id;
-        request.emailTemplateId = templates[0].Id;
+        request.emailTemplateId = template.Id;
         
         
         Test.startTest();
@@ -117,33 +127,10 @@ private class BuyerDocumentEmailServiceTest {
         Test.stopTest();
         
         
-        // Verify Opportunity Document
-        Opportunity_Document__c createdDocument = [
-            SELECT Id,
-                   Opportunity__c,
-                   Document_Type__c
-            FROM Opportunity_Document__c
-            WHERE Id = :documentRecord.Id
-        ];
-        
-        System.assertEquals(
-            opp.Id,
-        createdDocument.Opportunity__c,
-        'The Opportunity Document should be linked to the correct Opportunity.'
-            );
-        
-        System.assertEquals(
-            'Sale Deed',
-        createdDocument.Document_Type__c,
-        'The correct Document Type should be used.'
-            );
-        
-        
-        // Verify that the Salesforce File is linked
+        // Verify File Link
         List<ContentDocumentLink> linkedFiles = [
             SELECT Id,
-                   ContentDocumentId,
-                   LinkedEntityId
+                   ContentDocumentId
             FROM ContentDocumentLink
             WHERE LinkedEntityId = :documentRecord.Id
         ];
@@ -151,7 +138,7 @@ private class BuyerDocumentEmailServiceTest {
         System.assertEquals(
             1,
         linkedFiles.size(),
-        'One Salesforce File should be linked to the Opportunity Document.'
+        'Salesforce File should be linked with Opportunity Document'
             );
     }
     
@@ -161,16 +148,13 @@ private class BuyerDocumentEmailServiceTest {
         
         Test.startTest();
         
-        BuyerDocumentEmailService.sendBuyerDocuments(
-            null
-            );
+        BuyerDocumentEmailService.sendBuyerDocuments(null);
         
         Test.stopTest();
         
         System.assertEquals(
             0,
-        Limits.getEmailInvocations(),
-        'No email should be invoked for a null request.'
+        Limits.getEmailInvocations()
             );
     }
     
@@ -188,8 +172,7 @@ private class BuyerDocumentEmailServiceTest {
         
         System.assertEquals(
             0,
-        Limits.getEmailInvocations(),
-        'No email should be invoked for an empty request.'
+        Limits.getEmailInvocations()
             );
     }
     
@@ -216,8 +199,7 @@ private class BuyerDocumentEmailServiceTest {
         
         System.assertEquals(
             0,
-        Limits.getEmailInvocations(),
-        'No email should be invoked when Opportunity Id is missing.'
+        Limits.getEmailInvocations()
             );
     }
     
@@ -225,22 +207,19 @@ private class BuyerDocumentEmailServiceTest {
     @IsTest
     static void testMissingEmailTemplateId() {
         
-        List<Opportunity> opportunities = [
-            SELECT Id
-            FROM Opportunity
-            LIMIT 1
-        ];
-        
-        System.assert(
-            !opportunities.isEmpty(),
-        'An Opportunity is required.'
+        Opportunity opp = new Opportunity(
+            Name = 'Test Opportunity',
+        StageName = 'Prospecting',
+        CloseDate = Date.today().addDays(30)
             );
+        
+        insert opp;
         
         
         BuyerDocumentEmailService.Request request =
             new BuyerDocumentEmailService.Request();
         
-        request.opportunityId = opportunities[0].Id;
+        request.opportunityId = opp.Id;
         request.emailTemplateId = null;
         
         
@@ -256,8 +235,7 @@ private class BuyerDocumentEmailServiceTest {
         
         System.assertEquals(
             0,
-        Limits.getEmailInvocations(),
-        'No email should be invoked when Email Template Id is missing.'
+        Limits.getEmailInvocations()
             );
     }
 }
