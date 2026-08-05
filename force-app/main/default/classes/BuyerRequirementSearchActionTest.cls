@@ -4,21 +4,21 @@ private class BuyerRequirementSearchActionTest {
     @TestSetup
     static void setupData() {
 
-        Account acc = new Account(
-            Name = 'Test Buyer Account'
-        );
-        insert acc;
+        Account acc1 = new Account(Name = 'Existing Buyer Account');
+        Account acc2 = new Account(Name = 'New Buyer Account');
+        insert new List<Account>{ acc1, acc2 };
 
         Opportunity opp = new Opportunity(
             Name = 'Test Opportunity',
-            AccountId = acc.Id,
+            AccountId = acc1.Id,
             StageName = 'Prospecting',
             CloseDate = Date.today().addDays(30)
         );
         insert opp;
 
+
         Buyer_Requirement__c br1 = new Buyer_Requirement__c(
-            Account__c = acc.Id,
+            Account__c = acc2.Id,
             Preferred_Property_Type__c = 'Apartment',
             Preferred_Location__c = 'Delhi',
             Minimum_Budget__c = 100000,
@@ -28,8 +28,9 @@ private class BuyerRequirementSearchActionTest {
             Active__c = true
         );
 
+  
         Buyer_Requirement__c br2 = new Buyer_Requirement__c(
-            Account__c = acc.Id,
+            Account__c = acc1.Id,
             Preferred_Property_Type__c = 'Apartment',
             Preferred_Location__c = 'Delhi',
             Minimum_Budget__c = 100000,
@@ -39,8 +40,9 @@ private class BuyerRequirementSearchActionTest {
             Active__c = true
         );
 
+   
         Buyer_Requirement__c inactiveBR = new Buyer_Requirement__c(
-            Account__c = acc.Id,
+            Account__c = acc2.Id,
             Preferred_Property_Type__c = 'Apartment',
             Preferred_Location__c = 'Delhi',
             Minimum_Budget__c = 100000,
@@ -50,14 +52,11 @@ private class BuyerRequirementSearchActionTest {
             Active__c = false
         );
 
-        insert new List<Buyer_Requirement__c>{
-            br1,
-            br2,
-            inactiveBR
-        };
+        insert new List<Buyer_Requirement__c>{ br1, br2, inactiveBR };
 
+        
         Interested_Buyer__c ib = new Interested_Buyer__c(
-            Buyer_Account__c = acc.id,
+            Buyer_Account__c = acc1.Id,
             Opportunity__c = opp.Id,
             Buyer_Requirement__c = br2.Id,
             Status__c = 'New'
@@ -68,11 +67,7 @@ private class BuyerRequirementSearchActionTest {
     @IsTest
     static void testSearchBuyerRequirements() {
 
-        Opportunity opp = [
-            SELECT Id
-            FROM Opportunity
-            LIMIT 1
-        ];
+        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
 
         BuyerRequirementSearchAction.SearchRequest req =
             new BuyerRequirementSearchAction.SearchRequest();
@@ -85,19 +80,16 @@ private class BuyerRequirementSearchActionTest {
         req.minimumBathrooms = 2;
 
         Test.startTest();
-
         List<List<Buyer_Requirement__c>> results =
             BuyerRequirementSearchAction.searchBuyerRequirements(
                 new List<BuyerRequirementSearchAction.SearchRequest>{ req }
             );
-
         Test.stopTest();
 
         System.assertEquals(1, results.size());
         System.assertEquals(1, results[0].size());
 
         Buyer_Requirement__c returnedBR = results[0][0];
-
         System.assertEquals(true, returnedBR.Active__c);
         System.assertEquals('Apartment', returnedBR.Preferred_Property_Type__c);
         System.assertEquals(true, returnedBR.Gym_Required__c);
@@ -105,14 +97,11 @@ private class BuyerRequirementSearchActionTest {
 
     @IsTest
     static void testEmptyRequestList() {
-
         Test.startTest();
-
         List<List<Buyer_Requirement__c>> results =
             BuyerRequirementSearchAction.searchBuyerRequirements(
                 new List<BuyerRequirementSearchAction.SearchRequest>()
             );
-
         Test.stopTest();
 
         System.assertEquals(0, results.size());
@@ -120,12 +109,9 @@ private class BuyerRequirementSearchActionTest {
 
     @IsTest
     static void testNullRequestList() {
-
         Test.startTest();
-
         List<List<Buyer_Requirement__c>> results =
             BuyerRequirementSearchAction.searchBuyerRequirements(null);
-
         Test.stopTest();
 
         System.assertEquals(0, results.size());
@@ -133,12 +119,7 @@ private class BuyerRequirementSearchActionTest {
 
     @IsTest
     static void testNoMatchingRecords() {
-
-        Opportunity opp = [
-            SELECT Id
-            FROM Opportunity
-            LIMIT 1
-        ];
+        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
 
         BuyerRequirementSearchAction.SearchRequest req =
             new BuyerRequirementSearchAction.SearchRequest();
@@ -147,12 +128,10 @@ private class BuyerRequirementSearchActionTest {
         req.preferredPropertyType = 'Villa';
 
         Test.startTest();
-
         List<List<Buyer_Requirement__c>> results =
             BuyerRequirementSearchAction.searchBuyerRequirements(
                 new List<BuyerRequirementSearchAction.SearchRequest>{ req }
             );
-
         Test.stopTest();
 
         System.assertEquals(1, results.size());

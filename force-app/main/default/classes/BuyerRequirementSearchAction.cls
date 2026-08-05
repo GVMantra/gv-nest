@@ -31,15 +31,15 @@ public with sharing class BuyerRequirementSearchAction {
         SearchRequest req = requests[0];
 
         // Get Buyer Requirements already associated with this Opportunity
-        Set<Id> existingBuyerRequirementIds = new Set<Id>();
+        Set<Id> existingBuyerAccountIds = new Set<Id>();
 
         for (Interested_Buyer__c ib : [
-            SELECT Buyer_Requirement__c
+            SELECT Buyer_Account__c
             FROM Interested_Buyer__c
             WHERE Opportunity__c = :req.opportunityId
-            AND Buyer_Requirement__c != null
+            AND Buyer_Account__c != null
         ]) {
-            existingBuyerRequirementIds.add(ib.Buyer_Requirement__c);
+            existingBuyerAccountIds.add(ib.Buyer_Account__c);
         }
 
         String query =
@@ -55,9 +55,9 @@ public with sharing class BuyerRequirementSearchAction {
 
         Map<String, Object> bindVariables = new Map<String, Object>();
 
-        if (!existingBuyerRequirementIds.isEmpty()) {
-            query += ' AND Id NOT IN :existingBuyerRequirementIds';
-            bindVariables.put('existingBuyerRequirementIds', existingBuyerRequirementIds);
+        if (!existingBuyerAccountIds.isEmpty()) {
+            query += ' AND Account__c NOT IN :existingBuyerAccountIds';
+            bindVariables.put('existingBuyerAccountIds', existingBuyerAccountIds);
         }
 
         if (String.isNotBlank(req.preferredPropertyType)) {

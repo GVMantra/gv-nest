@@ -63,17 +63,42 @@
     <apiVersion>67.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <assignments>
+        <name>Add_BuyerIds</name>
+        <label>Add BuyerIds</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>Buyer_AccountIds</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>Loop_through_selected_Buyer_Requirement.Account__c</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Loop_through_selected_Buyer_Requirement</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>Assign_DuplicacyCheck</name>
+        <label>Assign DuplicacyCheck</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>duplicacycheck</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Add_BuyerIds</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
         <name>Assign_InterestedBuyers</name>
         <label>Assign InterestedBuyers</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
-        <assignmentItems>
-            <assignToReference>Single_InterestedBuyer.Buyer_Requirement__c</assignToReference>
-            <operator>Assign</operator>
-            <value>
-                <elementReference>Loop_on_SelectedBuyerRequirement.Id</elementReference>
-            </value>
-        </assignmentItems>
         <assignmentItems>
             <assignToReference>Single_InterestedBuyer.Buyer_Account__c</assignToReference>
             <operator>Assign</operator>
@@ -96,6 +121,13 @@
             </value>
         </assignmentItems>
         <assignmentItems>
+            <assignToReference>Single_InterestedBuyer.Buyer_Requirement__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Loop_on_SelectedBuyerRequirement.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
             <assignToReference>InterestedBuyer_Collection</assignToReference>
             <operator>Add</operator>
             <value>
@@ -112,6 +144,31 @@
             <stringValue>{&quot;location&quot;:&quot;top&quot;,&quot;type&quot;:&quot;simple&quot;}</stringValue>
         </value>
     </customProperties>
+    <decisions>
+        <name>Does_Duplicate_Value_Selected</name>
+        <label>Does Duplicate Value Selected</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Add_BuyerIds</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>NotSelected</defaultConnectorLabel>
+        <rules>
+            <name>Selected</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Buyer_AccountIds</leftValueReference>
+                <operator>Contains</operator>
+                <rightValue>
+                    <elementReference>Loop_through_selected_Buyer_Requirement.Account__c</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_DuplicacyCheck</targetReference>
+            </connector>
+            <label>Selected</label>
+        </rules>
+    </decisions>
     <decisions>
         <name>Does_User_has_Selected_any_Buyer_Requirement</name>
         <label>Does User has Selected any Buyer Requirement</label>
@@ -132,9 +189,34 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Loop_on_SelectedBuyerRequirement</targetReference>
+                <targetReference>Loop_through_selected_Buyer_Requirement</targetReference>
             </connector>
             <label>Yes</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Is_DuplicacyCheck</name>
+        <label>Is DuplicacyCheck</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Loop_on_SelectedBuyerRequirement</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>False</defaultConnectorLabel>
+        <rules>
+            <name>True</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>duplicacycheck</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Duplicate_Check_Screen</targetReference>
+            </connector>
+            <label>True</label>
         </rules>
     </decisions>
     <dynamicChoiceSets>
@@ -160,6 +242,20 @@
         </nextValueConnector>
         <noMoreValuesConnector>
             <targetReference>Create_InterestedBuyers</targetReference>
+        </noMoreValuesConnector>
+    </loops>
+    <loops>
+        <name>Loop_through_selected_Buyer_Requirement</name>
+        <label>Loop through selected Buyer Requirement</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <collectionReference>All_Buyer_Data.selectedRows</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Does_Duplicate_Value_Selected</targetReference>
+        </nextValueConnector>
+        <noMoreValuesConnector>
+            <targetReference>Is_DuplicacyCheck</targetReference>
         </noMoreValuesConnector>
     </loops>
     <processMetadataValues>
@@ -305,6 +401,30 @@
         <fields>
             <name>Success_Message</name>
             <fieldText>&lt;p&gt;&lt;span style=&quot;color: rgb(44, 147, 39); font-size: 16px;&quot;&gt;Interested Buyer Records have been created successfully&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <name>Duplicate_Check_Screen</name>
+        <label>Duplicate Check Screen</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <fields>
+            <name>DuplicateSelected</name>
+            <fieldText>&lt;p&gt;&lt;span style=&quot;font-size: 16px; color: rgb(240, 3, 3);&quot;&gt;User have selected multiple Buyer Requirement of the same Buyer Account&lt;/span&gt;&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
             <styleProperties>
                 <verticalAlignment>
@@ -469,12 +589,29 @@
         <isOutput>false</isOutput>
     </variables>
     <variables>
+        <name>Buyer_AccountIds</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
         <name>Buyer_Requirement_Collection</name>
         <dataType>SObject</dataType>
         <isCollection>true</isCollection>
         <isInput>false</isInput>
         <isOutput>false</isOutput>
         <objectType>Buyer_Requirement__c</objectType>
+    </variables>
+    <variables>
+        <name>duplicacycheck</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <booleanValue>false</booleanValue>
+        </value>
     </variables>
     <variables>
         <name>InterestedBuyer_Collection</name>
