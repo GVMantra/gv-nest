@@ -3,10 +3,19 @@
     <fullName>Buyer_Requirement__c</fullName>
     <deleteConstraint>Restrict</deleteConstraint>
     <label>Buyer Requirement</label>
+    <lookupFilter>
+        <active>true</active>
+        <filterItems>
+            <field>Buyer_Requirement__c.Account__c</field>
+            <operation>equals</operation>
+            <valueField>$Source.Buyer_Account__c</valueField>
+        </filterItems>
+        <isOptional>false</isOptional>
+    </lookupFilter>
     <referenceTo>Buyer_Requirement__c</referenceTo>
     <relationshipLabel>Interested Buyers</relationshipLabel>
     <relationshipName>Interested_Buyers</relationshipName>
-    <required>false</required>
+    <required>true</required>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
