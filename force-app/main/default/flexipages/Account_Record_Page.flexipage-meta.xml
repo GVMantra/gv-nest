@@ -13,6 +13,9 @@
                             <value>FeedItem.ContentPost</value>
                         </valueListItems>
                         <valueListItems>
+                            <value>EnableAsPartner</value>
+                        </valueListItems>
+                        <valueListItems>
                             <value>Global.NewTask</value>
                         </valueListItems>
                         <valueListItems>
