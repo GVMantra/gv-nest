@@ -4,6 +4,8 @@
     <isExposed>true</isExposed>
     <targets>
         <target>lightning__RecordPage</target>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
     </targets>
 
     <targetConfigs>
@@ -12,5 +14,13 @@
                 <object>Opportunity</object>
             </objects>
         </targetConfig>
+            
+            <targetConfig
+            targets="lightningCommunity__Default">
+            <property name="recordId" type="String"
+                label="Record ID"
+                description="Passes current record context" />
+        </targetConfig>
     </targetConfigs>
+
 </LightningComponentBundle>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Audience xmlns="http://soap.sforce.com/2006/04/metadata">
+    <audienceName>Seller audience</audienceName>
+    <container>Nest Customer Portal</container>
+    <criteria>
+        <criterion>
+            <criteriaNumber>1</criteriaNumber>
+            <criterionValue>
+                <isEnabled>true</isEnabled>
+                <permissionName>Seller</permissionName>
+                <permissionType>Custom</permissionType>
+            </criterionValue>
+            <operator>Equal</operator>
+            <type>Permission</type>
+        </criterion>
+    </criteria>
+    <formulaFilterType>AllCriteriaMatch</formulaFilterType>
+    <isDefaultAudience>false</isDefaultAudience>
+    <targets>
+        <target>
+            <groupName>8bfad48d-0151-41c2-bc5b-ea88cc2fc8f5$#$d285379d-487b-4d51-93cc-52908ba18e9a</groupName>
+            <priority>2</priority>
+            <targetType>ExperienceVariation</targetType>
+            <targetValue>Default_Navigation_Menu_1_Component_Properties</targetValue>
+        </target>
+        <target>
+            <groupName>4e20a2d8-6a11-4e6b-8856-31a42943fed1$#$fa896898-0349-4096-9791-df18dfbf208a</groupName>
+            <priority>1</priority>
+            <targetType>ExperienceVariation</targetType>
+            <targetValue>Opportunity_Detail_Tab_Layout_New_Component</targetValue>
+        </target>
+    </targets>
+</Audience>
