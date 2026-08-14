@@ -22,8 +22,34 @@ export default class ListingDocuments extends LightningElement {
     // Controls upload modal visibility
     showUploadModal = false;
 
+    // Controls whether Upload is displayed
+    showUploadButton = true;
+
     // Stores wired result for refreshApex
     wiredOpportunityDocumentsResult;
+
+    // Detect whether component is running inside Experience Cloud
+    connectedCallback() {
+
+        const currentPath = window.location.pathname;
+
+        // Experience Cloud pages contain /s/
+        const isExperienceCloud = currentPath.includes('/s/');
+
+        // Salesforce internal = Upload visible
+        // Experience Cloud = Upload hidden
+        this.showUploadButton = !isExperienceCloud;
+
+        console.log(
+            'Experience Cloud:',
+            isExperienceCloud
+        );
+
+        console.log(
+            'Show Upload Button:',
+            this.showUploadButton
+        );
+    }
 
     // Fetch all active document types
     @wire(getDocumentTypes)
@@ -36,8 +62,10 @@ export default class ListingDocuments extends LightningElement {
 
         } else if (error) {
 
-            console.error(error);
-
+            console.error(
+                'Document Types Error:',
+                JSON.stringify(error)
+            );
         }
     }
 
@@ -53,12 +81,19 @@ export default class ListingDocuments extends LightningElement {
 
             this.uploadedDocuments = data;
 
+            console.log(
+                'Uploaded Documents:',
+                JSON.stringify(data)
+            );
+
             this.prepareDisplayDocuments();
 
         } else if (error) {
 
-            console.error(error);
-
+            console.error(
+                'Opportunity Documents Error:',
+                JSON.stringify(error)
+            );
         }
     }
 
@@ -73,8 +108,30 @@ export default class ListingDocuments extends LightningElement {
 
             // Find the latest uploaded document for each document type
             const uploaded = this.uploadedDocuments
-                .filter(item => item.Document_Type__c === doc.Document_Type__c)
-                .sort((a, b) => new Date(b.Uploaded_On__c) - new Date(a.Uploaded_On__c))[0];
+                .filter(
+                    item =>
+                        item.Document_Type__c === doc.Document_Type__c
+                )
+                .sort(
+                    (a, b) =>
+                        new Date(b.Uploaded_On__c) -
+                        new Date(a.Uploaded_On__c)
+                )[0];
+
+            // Get ContentDocumentId from ContentDocumentLink
+            const downloadId =
+                uploaded &&
+                uploaded.ContentDocumentLinks &&
+                uploaded.ContentDocumentLinks.length > 0
+                    ? uploaded.ContentDocumentLinks[0].ContentDocumentId
+                    : null;
+
+            console.log(
+                'Document:',
+                doc.Document_Type__c,
+                'ContentDocumentId:',
+                downloadId
+            );
 
             return {
 
@@ -84,49 +141,42 @@ export default class ListingDocuments extends LightningElement {
 
                 mandatory: doc.Mandatory__c,
 
-                status: uploaded ? 'Uploaded' : 'Pending',
+                status: uploaded
+                    ? 'Uploaded'
+                    : 'Pending',
 
-                uploadedOn: uploaded ? uploaded.Uploaded_On__c : '',
+                uploadedOn: uploaded
+                    ? uploaded.Uploaded_On__c
+                    : '',
 
                 uploadedBy:
-                    uploaded && uploaded.Uploaded_By__r
+                    uploaded &&
+                    uploaded.Uploaded_By__r
                         ? uploaded.Uploaded_By__r.Name
                         : '',
 
-                // Store ContentDocumentId for download
-                downloadId:
-                    uploaded &&
-                    uploaded.ContentDocumentLinks &&
-                    uploaded.ContentDocumentLinks.length
-                        ? uploaded.ContentDocumentLinks[0].ContentDocumentId
-                        : null,
+                // Salesforce ContentDocumentId
+                downloadId: downloadId,
 
-                // Determines whether a file is available for download
-                hasFile:
-                    uploaded &&
-                    uploaded.ContentDocumentLinks &&
-                    uploaded.ContentDocumentLinks.length > 0
-
+                // True when a Salesforce File exists
+                hasFile: !!downloadId
             };
-
         });
-
     }
 
     // Opens the upload modal for the selected document type
     handleUploadClick(event) {
 
-        this.selectedDocumentType = event.target.dataset.document;
+        this.selectedDocumentType =
+            event.currentTarget.dataset.document;
 
         this.showUploadModal = true;
-
     }
 
     // Closes the upload modal
     handleCancel() {
 
         this.showUploadModal = false;
-
     }
 
     // Creates Opportunity Document record and links uploaded file
@@ -138,51 +188,106 @@ export default class ListingDocuments extends LightningElement {
 
             for (const file of uploadedFiles) {
 
+                console.log(
+                    'Uploaded ContentDocumentId:',
+                    file.documentId
+                );
+
                 // Create Opportunity Document record
-                const opportunityDocumentId = await createOpportunityDocument({
+                const opportunityDocumentId =
+                    await createOpportunityDocument({
+                        opportunityId: this.recordId,
+                        documentType: this.selectedDocumentType
+                    });
 
-                    opportunityId: this.recordId,
-                    documentType: this.selectedDocumentType
+                console.log(
+                    'Opportunity Document Id:',
+                    opportunityDocumentId
+                );
 
-                });
-
-                // Link uploaded Salesforce File with Opportunity Document
+                // Link uploaded Salesforce File
                 await linkFileToOpportunityDocument({
-
                     contentDocumentId: file.documentId,
-                    opportunityDocumentId: opportunityDocumentId
-
+                    opportunityDocumentId:
+                        opportunityDocumentId
                 });
-
             }
 
             // Close upload modal
             this.showUploadModal = false;
 
-            // Wait briefly to ensure records are committed
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Wait for records to commit
+            await new Promise(
+                resolve => setTimeout(resolve, 1000)
+            );
 
             // Refresh uploaded document data
-            await refreshApex(this.wiredOpportunityDocumentsResult);
+            await refreshApex(
+                this.wiredOpportunityDocumentsResult
+            );
 
         } catch (error) {
 
-            console.error('Upload Error', error);
-
+            console.error(
+                'Upload Error:',
+                JSON.stringify(error)
+            );
         }
-
     }
 
     // Downloads the uploaded Salesforce File
     handleDownload(event) {
 
-        const documentId = event.target.dataset.id;
+        const documentId =
+            event.currentTarget.dataset.id;
 
-        window.open(
-            '/sfc/servlet.shepherd/document/download/' + documentId,
-            '_blank'
+        if (!documentId) {
+
+            console.error(
+                'ContentDocumentId is missing'
+            );
+
+            return;
+        }
+
+        // Current page path
+        const currentPath =
+            window.location.pathname;
+
+        // Determine Experience Cloud site path
+        let sitePath = '';
+
+        const siteMarker = '/s/';
+        const siteIndex =
+            currentPath.indexOf(siteMarker);
+
+        if (siteIndex !== -1) {
+
+            sitePath =
+                currentPath.substring(0, siteIndex);
+        }
+
+        // Build Salesforce File download URL
+        const downloadUrl =
+            window.location.origin +
+            sitePath +
+            '/sfc/servlet.shepherd/document/download/' +
+            documentId +
+            '?operationContext=S1';
+
+        console.log(
+            'ContentDocumentId:',
+            documentId
         );
 
-    }
+        console.log(
+            'Download URL:',
+            downloadUrl
+        );
 
+        window.open(
+            downloadUrl,
+            '_blank'
+        );
+    }
 }

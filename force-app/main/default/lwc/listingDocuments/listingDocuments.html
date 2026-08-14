@@ -1,30 +1,50 @@
 <template>
+
     <lightning-card title="Listing Documents">
+
         <div class="slds-p-around_medium">
 
             <table class="slds-table slds-table_bordered slds-table_cell-buffer">
 
                 <thead>
+
                     <tr>
+
                         <th>Document Type</th>
+
                         <th>Mandatory</th>
+
                         <th>Status</th>
+
                         <th>Uploaded Date</th>
+
                         <th>Uploaded By</th>
-                        <th>Upload</th>
+
+                        <!-- Upload column only visible in Salesforce -->
+                        <template if:true={showUploadButton}>
+                            <th>Upload</th>
+                        </template>
+
                         <th>Download</th>
+
                     </tr>
+
                 </thead>
 
                 <tbody>
 
-                    <template for:each={displayDocuments} for:item="doc">
+                    <template
+                        for:each={displayDocuments}
+                        for:item="doc">
 
                         <tr key={doc.id}>
 
-                            <td>{doc.documentType}</td>
+                            <td>
+                                {doc.documentType}
+                            </td>
 
                             <td>
+
                                 <template if:true={doc.mandatory}>
                                     Yes
                                 </template>
@@ -32,33 +52,51 @@
                                 <template if:false={doc.mandatory}>
                                     No
                                 </template>
+
                             </td>
 
-                            <td>{doc.status}</td>
-                            <td>{doc.uploadedOn}</td>
-                            <td>{doc.uploadedBy}</td>
-
                             <td>
-                                <lightning-button
-                                    label="Upload"
-                                    variant="brand"
-                                    data-document={doc.documentType}
-                                    onclick={handleUploadClick}>
-                                </lightning-button>
+                                {doc.status}
                             </td>
+
+                            <td>
+                                {doc.uploadedOn}
+                            </td>
+
+                            <td>
+                                {doc.uploadedBy}
+                            </td>
+
+                            <!-- Upload button only visible in Salesforce -->
+                            <template if:true={showUploadButton}>
+
+                                <td>
+
+                                    <lightning-button
+                                        label="Upload"
+                                        variant="brand"
+                                        data-document={doc.documentType}
+                                        onclick={handleUploadClick}>
+                                    </lightning-button>
+
+                                </td>
+
+                            </template>
+
+                            <!-- Download -->
                             <td>
 
-    <template if:true={doc.hasFile}>
+                                <template if:true={doc.hasFile}>
 
-        <lightning-button
-            label="Download"
-            data-id={doc.downloadId}
-            onclick={handleDownload}>
-        </lightning-button>
+                                    <lightning-button
+                                        label="Download"
+                                        data-id={doc.downloadId}
+                                        onclick={handleDownload}>
+                                    </lightning-button>
 
-    </template>
+                                </template>
 
-</td>
+                            </td>
 
                         </tr>
 
@@ -67,54 +105,66 @@
                 </tbody>
 
             </table>
+
+            <!-- Upload modal -->
             <template if:true={showUploadModal}>
 
-    <section role="dialog" tabindex="-1"
-        class="slds-modal slds-fade-in-open">
+                <section
+                    role="dialog"
+                    tabindex="-1"
+                    class="slds-modal slds-fade-in-open">
 
-        <div class="slds-modal__container">
+                    <div class="slds-modal__container">
 
-            <header class="slds-modal__header">
-                <h2 class="slds-text-heading_medium">
-                    Upload Document
-                </h2>
-            </header>
+                        <header class="slds-modal__header">
 
-            <div class="slds-modal__content slds-p-around_medium">
+                            <h2 class="slds-text-heading_medium">
+                                Upload Document
+                            </h2>
 
-                <p>
-                    <strong>Document Type:</strong>
-                    {selectedDocumentType}
-                </p>
-                 <br/>
+                        </header>
 
- <lightning-file-upload
-    label="Select File"
-    name="fileUploader"
-    record-id={recordId}
-    onuploadfinished={handleUploadFinished}
-    multiple>
-</lightning-file-upload>
+                        <div class="slds-modal__content slds-p-around_medium">
 
-            </div>
+                            <p>
 
-            <footer class="slds-modal__footer">
+                                <strong>Document Type:</strong>
 
-                <lightning-button
-                    label="Cancel"
-                    onclick={handleCancel}>
-                </lightning-button>
+                                {selectedDocumentType}
 
-            </footer>
+                            </p>
+
+                            <br />
+
+                            <lightning-file-upload
+                                label="Select File"
+                                name="fileUploader"
+                                record-id={recordId}
+                                onuploadfinished={handleUploadFinished}
+                                multiple>
+                            </lightning-file-upload>
+
+                        </div>
+
+                        <footer class="slds-modal__footer">
+
+                            <lightning-button
+                                label="Cancel"
+                                onclick={handleCancel}>
+                            </lightning-button>
+
+                        </footer>
+
+                    </div>
+
+                </section>
+
+                <div class="slds-backdrop slds-backdrop_open"></div>
+
+            </template>
 
         </div>
 
-    </section>
-
-    <div class="slds-backdrop slds-backdrop_open"></div>
-
-</template>
-
-        </div>
     </lightning-card>
+
 </template>
