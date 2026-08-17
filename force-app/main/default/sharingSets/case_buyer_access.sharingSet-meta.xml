@@ -8,5 +8,5 @@
     </accessMappings>
     <description>Provides Seller portal users read-only access to Opportunities related to their Account.</description>
     <name>case buyer  access</name>
-    <profiles>customer community access</profiles>
+    <profiles>customer community clone</profiles>
 </SharingSet>
