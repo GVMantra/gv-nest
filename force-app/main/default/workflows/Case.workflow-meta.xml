@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fieldUpdates>
+        <fullName>ChangePriorityToHigh</fullName>
+        <field>Priority</field>
+        <literalValue>High</literalValue>
+        <name>Changes the case priority to high.</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Resolution_SLA_Status_to_violated</fullName>
+        <field>Resolution_SLA_Status__c</field>
+        <literalValue>Violated</literalValue>
+        <name>Resolution SLA Status to violated</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Resolution_SLA_Status_to_warning</fullName>
+        <field>Resolution_SLA_Status__c</field>
+        <literalValue>Warning</literalValue>
+        <name>Resolution SLA Status to warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Set_First_Response_SLA_Status0_Warning</fullName>
+        <field>First_Response_SLA_Status__c</field>
+        <literalValue>Warning</literalValue>
+        <name>Set First Response SLA Status0 Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Set_First_Response_SLA_Status1_Warning</fullName>
+        <field>First_Response_SLA_Status__c</field>
+        <literalValue>Warning</literalValue>
+        <name>Set First Response SLA Status1 Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Set_First_Response_SLA_Status2_Violated</fullName>
+        <field>First_Response_SLA_Status__c</field>
+        <literalValue>Violated</literalValue>
+        <name>Set First Response SLA Status2 Violated</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Set_First_Response_SLA_Status_Violated</fullName>
+        <field>First_Response_SLA_Status__c</field>
+        <literalValue>Violated</literalValue>
+        <name>Set First Response SLA Status Violated</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Set_First_Response_SLA_Status_Warning</fullName>
+        <field>First_Response_SLA_Status__c</field>
+        <literalValue>Warning</literalValue>
+        <name>Set First Response SLA Status Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+</Workflow>

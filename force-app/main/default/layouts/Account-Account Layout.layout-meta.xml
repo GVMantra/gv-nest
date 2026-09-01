@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Layout xmlns="http://soap.sforce.com/2006/04/metadata">
-    <excludeButtons>DataDotComClean</excludeButtons>
-    <excludeButtons>OpenSlackRecordChannel</excludeButtons>
-    <excludeButtons>SmartFillEnrich</excludeButtons>
     <excludeButtons>Submit</excludeButtons>
     <layoutSections>
         <customLabel>false</customLabel>
@@ -366,6 +363,13 @@
             <quickActionName>SendEmail</quickActionName>
         </quickActionListItems>
     </quickActionList>
+    <relatedLists>
+        <fields>ENTITLEMENT.NAME</fields>
+        <fields>ENTITLEMENT.STARTDATE</fields>
+        <fields>ENTITLEMENT.ENDDATE</fields>
+        <fields>ENTITLEMENT.STATUS</fields>
+        <relatedList>RelatedEntitlementList</relatedList>
+    </relatedLists>
     <relatedLists>
         <fields>FULL_NAME</fields>
         <fields>CONTACT.TITLE</fields>
