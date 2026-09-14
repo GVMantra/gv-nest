@@ -1,0 +1,12 @@
+{
+  "activeViewId" : "ad65deb2-bd1f-4bf3-b467-fd00a5b3fbe8",
+  "appPageId" : "159524c3-e452-4c17-ab4a-dbdd6ceb2cec",
+  "configurationTags" : [ ],
+  "devName" : "Buyer_Requirement_List__c",
+  "id" : "3ae7c2ee-82ef-41eb-904f-d54daf37319b",
+  "label" : "Buyer Requirement List",
+  "objectApiName" : "Buyer_Requirement__c",
+  "routeType" : "list-a05",
+  "type" : "route",
+  "urlPrefix" : "buyer-requirement"
+}

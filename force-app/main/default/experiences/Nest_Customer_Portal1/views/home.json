@@ -1,0 +1,132 @@
+{
+  "appPageId" : "159524c3-e452-4c17-ab4a-dbdd6ceb2cec",
+  "componentName" : "siteforce:sldsTwoCol84SidebarFeaturedLayout",
+  "dataProviders" : [ ],
+  "id" : "7da0026b-d2dd-4859-9f38-6a5cd795f8f4",
+  "label" : "Home",
+  "regions" : [ {
+    "components" : [ {
+      "componentAttributes" : {
+        "bannerText" : "Track your property search and active deals",
+        "bannerTextWithKnowledge" : "Explore other <a href=\"javascript:void(0)\" class=\"headlineArticles\">articles</a> and <a href=\"javascript:void(0)\" class=\"headlineDiscussions\">discussions</a> on this topic.",
+        "bannerTextWithoutKnowledge" : "Explore other <a href=\"javascript:void(0)\" class=\"headlineDiscussions\">discussions</a> on this topic.",
+        "pageType" : "",
+        "showSubTopics" : true,
+        "title" : "Welcome!",
+        "uniqueNameOrId" : ""
+      },
+      "componentName" : "forceCommunity:headline",
+      "id" : "25dada94-4f9e-42d4-b826-5726ac0ec850",
+      "renderPriority" : "NEUTRAL",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "f18e012a-8bcf-458a-a3c8-d11776faf4b4",
+    "regionName" : "header",
+    "type" : "region"
+  }, {
+    "components" : [ {
+      "componentAttributes" : {
+        "richTextValue" : "<h2 style=\"text-align: center;\"><span style=\"font-size: 20px; font-family: serif;\">&nbsp;&nbsp;</span><strong style=\"font-size: 20px; font-family: serif;\">Need Assistance?</strong></h2><p><strong style=\"font-size: 20px; font-family: serif;\">Your Dedicated Real Estate Agent</strong></p><p><span style=\"font-size: 18px; font-family: serif;\">👤 </span><strong style=\"font-size: 18px; font-family: serif;\">Name:</strong><span style=\"font-size: 18px; font-family: serif;\"> Rahul Sharma﻿</span></p><p><span style=\"font-family: serif; font-size: 18px;\">📞 </span><strong style=\"font-family: serif; font-size: 18px;\">Phone:</strong><span style=\"font-family: serif; font-size: 18px;\"> +91 98765 43210</span></p><p><span style=\"font-family: serif; font-size: 18px;\">✉️ </span><strong style=\"font-family: serif; font-size: 18px;\">Email:</strong><span style=\"font-family: serif; font-size: 18px;\"> rahul.sharma@housingportal.com</span></p><p><span style=\"font-family: serif; font-size: 18px;\">🕒 </span><strong style=\"font-family: serif; font-size: 18px;\">Hours:</strong><span style=\"font-family: serif; font-size: 18px;\"> Mon – Sat | 9:00 AM – 6:00 PM IST</span></p><p><br></p><p><em style=\"font-size: 16px; font-family: arial;\">Have questions about your requirements or deal status? Feel free to call or drop an email anytime.﻿</em></p>"
+      },
+      "componentName" : "forceCommunity:richTextInline",
+      "id" : "bc00c3af-2ef6-4d3d-a597-07bbddf7f460",
+      "renderPriority" : "NEUTRAL",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "f58265f5-373a-4a4f-b717-2fd15e11ecfc",
+    "regionName" : "featured",
+    "type" : "region"
+  }, {
+    "components" : [ {
+      "componentAttributes" : {
+        "richTextValue" : "<p><img class=\"sfdcCbImage\" alt=\"\" src=\"{!contentAsset.ChatGPT_Image_Jul_28_2026_02_03_581.1}\"></p>"
+      },
+      "componentName" : "forceCommunity:richTextInline",
+      "id" : "f4218aa2-30e4-417b-8d36-d42170aff7e4",
+      "renderPriority" : "NEUTRAL",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "125c3c0e-7bc2-4b63-88f6-199c75ffd37d",
+    "regionName" : "content",
+    "type" : "region"
+  }, {
+    "components" : [ {
+      "componentAttributes" : {
+        "clientVersion" : "WebV1",
+        "deploymentName" : "Nest_Community_Chat",
+        "hideChatButtonOnLoad" : "Visible",
+        "isExpSiteAuthMode" : false,
+        "scrtUrl" : "https://orgfarm-4d231c31b9-dev-ed.develop.my.salesforce-scrt.com",
+        "siteEndpoint" : "https://orgfarm-4d231c31b9-dev-ed.develop.my.site.com/ESWNestCommunityChat1788239050408"
+      },
+      "componentName" : "experience_messaging:embeddedMessaging",
+      "id" : "6f901619-051a-493c-8a90-4f438ccfc95c",
+      "renderPriority" : "NEUTRAL",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "aef743b9-8b63-4b15-993f-3f69dfe12cbd",
+    "regionName" : "sidebar",
+    "type" : "region"
+  }, {
+    "components" : [ {
+      "componentAttributes" : {
+        "askCommunityLabel" : "Ask a Question",
+        "buttonBgColor" : "",
+        "buttonBgHoverColor" : "",
+        "buttonBorderColor" : "",
+        "buttonRadius" : 0,
+        "buttonTextColor" : "",
+        "buttonTextHoverColor" : "",
+        "buttonTwoBgColor" : "",
+        "buttonTwoBgHoverColor" : "",
+        "buttonTwoBorderColor" : "",
+        "buttonTwoRadius" : 0,
+        "buttonTwoTextColor" : "",
+        "buttonTwoTextHoverColor" : "",
+        "confirmationMessage" : "Got it!",
+        "contactSupportLabel" : "Contact Support",
+        "followUpPromptLabel" : "Can we close your question?",
+        "headerLabel" : "Don't see what you're looking for?",
+        "isAskFollowPromptEnabled" : true,
+        "isIncludeArticlesEnabled" : false,
+        "isIncludeDiscussionsEnabled" : true,
+        "isInitialSatisfactionPromptEnabled" : true,
+        "isPublisherDeflectionEnabled" : true,
+        "maxSuggestions" : 5,
+        "satisfactionPromptLabel" : "Did we help to answer your question?",
+        "showDetails" : false,
+        "showTopics" : true
+      },
+      "componentName" : "siteforce:napiliFooter",
+      "id" : "88aba1f1-e1a8-4dbb-9386-b4fb13635c77",
+      "renderPriority" : "NEUTRAL",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "9215c29d-4d59-4ac5-ab9c-c7238889251f",
+    "regionName" : "footer",
+    "type" : "region"
+  }, {
+    "components" : [ {
+      "componentAttributes" : {
+        "customHeadTags" : "",
+        "description" : "",
+        "title" : "Home"
+      },
+      "componentName" : "forceCommunity:seoAssistant",
+      "id" : "f513ae33-467a-4df3-a1dc-aec2e6269cf4",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "5d0492c4-ba29-459a-8d58-cd2bb1f1ab68",
+    "regionName" : "sfdcHiddenRegion",
+    "type" : "region"
+  } ],
+  "themeLayoutType" : "Inner",
+  "type" : "view",
+  "viewType" : "home"
+}
